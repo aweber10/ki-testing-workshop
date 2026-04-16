@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RechnungswesenService – SOAP Testclient (Schulung)</title>
+<style>
+  :root {
+    --bg:         #ece8e1;
+    --surface:    #ffffff;
+    --surface2:   #f6f3ee;
+    --border:     #d5cfc6;
+    --border2:    #bfb8ae;
+    --text:       #1a2035;
+    --text2:      #48556a;
+    --text3:      #8a95a6;
+    --navy:       #1d3a6e;
+    --navy2:      #142d57;
+    --navy-light: #e9eef8;
+    --green:      #1a6b3c;
+    --green-bg:   #e8f5ec;
+    --green-bd:   #9ed0b2;
+    --red:        #b71c1c;
+    --red-bg:     #fdf2f2;
+    --red-bd:     #f5a8a8;
+    --amber:      #b45309;
+    --amber-bg:   #fef8ec;
+    --amber-bd:   #f0c87a;
+    --radius:     4px;
+    --shadow:     0 2px 10px rgba(0,0,0,.10);
+    --shadow-sm:  0 1px 4px rgba(0,0,0,.08);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    font-family: 'Trebuchet MS', 'Calibri', 'Lucida Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    flex-shrink: 0;
+    background: var(--navy);
+    color: #fff;
+    padding: 0 20px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    z-index: 10;
+  }
+  .h-logo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,.35);
+    padding: 3px 9px;
+    border-radius: 3px;
+    color: rgba(255,255,255,.9);
+    white-space: nowrap;
+  }
+  .h-sep { width: 1px; height: 22px; background: rgba(255,255,255,.2); }
+  .h-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+  .h-ns {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,.5);
+  }
+  .h-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    padding: 2px 10px;
+    border-radius: 20px;
+    color: rgba(255,255,255,.75);
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 9px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9;
+  }
+  .toolbar-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text3);
+  }
+  select.op-select {
+    padding: 6px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    font: 13px 'Trebuchet MS', sans-serif;
+    color: var(--text);
+    background: var(--surface);
+    cursor: pointer;
+    min-width: 210px;
+  }
+  select.op-select:focus { outline: 2px solid var(--navy); outline-offset: 1px; border-color: var(--navy); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px;
+    border-radius: var(--radius);
+    font: 600 13px 'Trebuchet MS', sans-serif;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .12s, border-color .12s, color .12s;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn-primary:hover { background: var(--navy2); }
+  .btn-secondary { background: var(--surface); color: var(--text2); border-color: var(--border2); }
+  .btn-secondary:hover { background: var(--surface2); border-color: var(--navy); color: var(--navy); }
+  .btn-clear { background: transparent; color: var(--text3); border-color: transparent; font-weight: 400; }
+  .btn-clear:hover { color: var(--red); background: var(--red-bg); }
+  .toolbar-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+
+  /* ── Main content area ── */
+  .content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* ── Two-column grid ── */
+  .main-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ── Panels ── */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .panel:last-child { border-right: none; }
+
+  .panel-bar {
+    flex-shrink: 0;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-bar-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: var(--text2);
+  }
+  .panel-bar-meta {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: Consolas, 'Courier New', monospace;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+  }
+  .status-dot.ok  { background: var(--green); }
+  .status-dot.err { background: var(--red); }
+  .status-dot.pending { background: var(--amber); }
+
+  /* ── Request editor ── */
+  .request-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+  #requestEditor {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font: 12.5px/1.65 Consolas, 'Courier New', monospace;
+    padding: 14px 16px;
+    color: var(--text);
+    background: #fff;
+    tab-size: 2;
+    min-height: 0;
+  }
+  #requestEditor::placeholder { color: var(--text3); font-style: italic; }
+
+  /* ── Right panel ── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .response-xml-wrap {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    background: #fff;
+  }
+  #responseDisplay {
+    padding: 14px 16px;
+    font: 12.5px/1.65 Consolas, 'Courier New', monospace;
+    white-space: pre;
+    color: var(--text2);
+    min-height: 60px;
+  }
+  .resp-placeholder {
+    color: var(--text3);
+    font-style: italic;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 13px;
+    white-space: normal;
+  }
+
+  /* ── Summary panel ── */
+  .summary-panel {
+    flex-shrink: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    border-top: 2px solid var(--border);
+    background: var(--surface);
+  }
+  .summary-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: var(--text3);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .summary-body { padding: 12px 14px; }
+
+  /* ── Stelle badges ── */
+  .stelle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .s-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px 7px;
+    border-radius: 4px;
+    min-width: 58px;
+    border: 1px solid;
+    cursor: default;
+  }
+  .s-badge .s-nr  { font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .7; margin-bottom: 2px; }
+  .s-badge .s-val { font-size: 17px; font-weight: 700; font-family: Consolas, monospace; line-height: 1; }
+  .s-badge .s-lbl { font-size: 9px; text-align: center; margin-top: 3px; line-height: 1.2; max-width: 70px; opacity: .85; }
+  .s-ok  { background: var(--green-bg); border-color: var(--green-bd); color: var(--green); }
+  .s-err { background: var(--red-bg);   border-color: var(--red-bd);   color: var(--red);   }
+
+  .fehler-list { display: flex; flex-direction: column; gap: 5px; }
+  .fehler-item {
+    display: flex; gap: 8px;
+    padding: 7px 10px;
+    background: var(--red-bg);
+    border: 1px solid var(--red-bd);
+    border-left: 3px solid var(--red);
+    border-radius: var(--radius);
+    font-size: 12px;
+  }
+  .fi-stelle { font-weight: 700; color: var(--red); white-space: nowrap; font-size: 11px; padding-top: 1px; flex-shrink: 0; }
+  .fi-text   { color: var(--text); }
+
+  .all-ok-box {
+    padding: 10px 14px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-bd);
+    border-left: 3px solid var(--green);
+    border-radius: var(--radius);
+    color: var(--green);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .result-box {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid;
+  }
+  .result-ok    { background: var(--green-bg); border-color: var(--green-bd); border-left: 3px solid var(--green); }
+  .result-fault { background: var(--red-bg);   border-color: var(--red-bd);   border-left: 3px solid var(--red);   }
+  .result-box strong { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+  .result-ok strong    { color: var(--green); }
+  .result-fault strong { color: var(--red);   }
+  .result-detail { font-size: 12px; color: var(--text); }
+  .result-detail table { border-collapse: collapse; margin-top: 6px; }
+  .result-detail td { padding: 2px 10px 2px 0; vertical-align: top; }
+  .result-detail td:first-child { font-weight: 600; color: var(--text2); white-space: nowrap; }
+
+  /* ── Session list ── */
+  .session-section {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 2px solid var(--navy);
+    max-height: 190px;
+    overflow-y: auto;
+  }
+  .session-bar {
+    background: var(--navy);
+    color: rgba(255,255,255,.9);
+    padding: 7px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .session-bar-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .9px; }
+  .session-cnt {
+    font-size: 11px;
+    background: rgba(255,255,255,.18);
+    padding: 1px 9px;
+    border-radius: 20px;
+  }
+  .session-empty { padding: 14px 20px; color: var(--text3); font-style: italic; font-size: 13px; }
+  .s-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .s-table th {
+    background: var(--surface2); color: var(--text3); font-size: 10px; font-weight: 700;
+    letter-spacing: .8px; text-transform: uppercase; padding: 5px 12px; text-align: left;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .s-table td { padding: 6px 12px; border-bottom: 1px solid var(--border); }
+  .s-table tr:last-child td { border-bottom: none; }
+  .s-table tr:hover td { background: var(--navy-light); }
+  .s-table .mono { font-family: Consolas, 'Courier New', monospace; font-size: 11px; }
+  .s-table .tag-art {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+    padding: 1px 7px; border-radius: 20px;
+    background: var(--navy-light); color: var(--navy); border: 1px solid #b8c8e8;
+  }
+
+  /* ── XML Syntax Highlighting ── */
+  .xp  { color: #6b7a8d; } /* processing instruction */
+  .xc  { color: #9ca8b4; font-style: italic; } /* comment */
+  .xt  { color: var(--navy); } /* tag brackets < > / */
+  .xn  { color: #1756a0; font-weight: 600; } /* tag name */
+  .xa  { color: #7c3aed; } /* attribute name */
+  .xv  { color: #1a6b3c; } /* attribute value */
+  .xd  { color: var(--text); } /* text content */
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 18px; right: 18px;
+    background: var(--navy); color: #fff;
+    padding: 9px 18px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow);
+    opacity: 0; transform: translateY(8px);
+    transition: all .25s; pointer-events: none; z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <span class="h-logo">RW</span>
+  <div class="h-sep"></div>
+  <span class="h-title">RechnungswesenService</span>
+  <span class="h-ns">http://webservice.mach.de/rechnungswesen/v11/</span>
+  <span class="h-badge">Schulung – Simulation</span>
+</header>
+
+<!-- ── TOOLBAR ── -->
+<div class="toolbar">
+  <span class="toolbar-label">Operation</span>
+  <select class="op-select" id="opSelect" onchange="onOpChange()">
+    <option value="pruefeBuchbarkeit">pruefeBuchbarkeit</option>
+    <option value="insertBeleg">insertBeleg</option>
+  </select>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-secondary" onclick="loadExample()">⤓ Beispiel laden</button>
+  <button class="btn btn-primary"   onclick="handleSend()">▶ Senden</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-clear"     onclick="clearAll()">✕ Leeren</button>
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="content-area">
+  <div class="main-grid">
+
+    <!-- Left: Request -->
+    <div class="panel">
+      <div class="panel-bar">
+        <div class="status-dot" id="reqDot"></div>
+        <span class="panel-bar-title">SOAP Request</span>
+        <span class="panel-bar-meta" id="reqMeta"></span>
+      </div>
+      <div class="request-area">
+        <textarea id="requestEditor"
+          placeholder="SOAP-Envelope hier einfügen …&#10;&#10;Tipp: »Beispiel laden« um einen fertigen Request einzufügen."
+          spellcheck="false"
+          oninput="updateReqMeta()"></textarea>
+      </div>
+    </div>
+
+    <!-- Right: Response + Summary -->
+    <div class="panel right-panel">
+      <div class="panel-bar">
+        <div class="status-dot" id="respDot"></div>
+        <span class="panel-bar-title">SOAP Response</span>
+        <span class="panel-bar-meta" id="respMeta"></span>
+      </div>
+      <div class="response-xml-wrap">
+        <div id="responseDisplay">
+          <span class="resp-placeholder">Noch keine Antwort. Request eingeben und »Senden« klicken.</span>
+        </div>
+      </div>
+      <div class="summary-panel" id="summaryPanel" style="display:none">
+        <div class="summary-bar">Zusammenfassung</div>
+        <div class="summary-body" id="summaryBody"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-grid -->
+
+  <!-- Session list -->
+  <div class="session-section">
+    <div class="session-bar">
+      <span class="session-bar-title">Eingefügte Belege (Session)</span>
+      <span class="session-cnt" id="sessionCnt">0</span>
+    </div>
+    <div id="sessionBody">
+      <div class="session-empty">Noch keine Belege mit insertBeleg eingefügt.</div>
+    </div>
+  </div>
+</div><!-- /content-area -->
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════════════════
+//  STAMMDATEN
+// ══════════════════════════════════════════════════════════════════════════
+const BILANZKONTEN = [
+  'LOHN-UND GEHALTSVER', 'VERB. LOHN U. GEHALT',
+  'VERB. SV', 'VERB. LOHN&KISTEUER'
+];
+const AUFWANDSKONTEN_OHNE_UST = [
+  'GEHÄLTER', 'AUSBILDUNGSVERGÜTUNG', '13. MONATSGEHALT', 'URLAUBSGELD',
+  'LEISTUNGSPRÄMIE', 'JUBILÄUMSZUWENDUNG', 'GESETZL. SOZ. AUFW.', 'PAUSCH. LOHNSTEUER'
+];
+const AUFWANDSKONTEN_MIT_UST = [
+  'REISEKOSTEN', 'BÜROMATERIAL', 'WERBEKOSTEN'
+];
+const ALLE_KONTEN = [...BILANZKONTEN, ...AUFWANDSKONTEN_OHNE_UST, ...AUFWANDSKONTEN_MIT_UST];
+
+const KOSTENSTELLEN = {
+  '1010': 'Entwicklung',
+  '1020': 'Ausbildung',
+  '1030': 'Verwaltung',
+  '2010': 'Vertrieb',
+  '2020': 'Marketing',
+  '3050': 'Geschäftsführung'
+};
+const GESPERRTE_KST = '9999';
+
+const RW_NS   = 'http://webservice.mach.de/rechnungswesen/v11/';
+const SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
+
+const STELLE_LABELS = [
+  'Buchungsdatum im Zeitraum',
+  'Periode offen',
+  'Konten existieren',
+  'Konten bebuchbar',
+  'Abrechnungsobjekte',
+  'Kostenstellen bebuchbar',
+  'BAB / USt-Konsistenz',
+  'Hierarchieobjekte',
+  'Haushaltsstellen'
+];
+
+// Session-Speicher für insertBeleg
+const sessionBelege = [];
+
+// ══════════════════════════════════════════════════════════════════════════
+//  HILFSFUNKTIONEN
+// ══════════════════════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function getChildVal(el, localName) {
+  if (!el) return '';
+  for (const child of el.children) {
+    if (child.localName === localName) return child.textContent.trim();
+  }
+  return '';
+}
+
+function rnd(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function fmtNum(n) {
+  return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function kontoTyp(titel) {
+  if (BILANZKONTEN.includes(titel))            return 'bilanz';
+  if (AUFWANDSKONTEN_OHNE_UST.includes(titel)) return 'aufwand_ohneUSt';
+  if (AUFWANDSKONTEN_MIT_UST.includes(titel))  return 'aufwand_mitUSt';
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  XML SYNTAX HIGHLIGHTING
+// ══════════════════════════════════════════════════════════════════════════
+function highlightXML(xmlStr) {
+  if (!xmlStr) return '';
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Parse attributes within a tag's attribute string (raw, not yet escaped)
+  function renderAttrs(attrStr) {
+    let out = '';
+    let rest = attrStr;
+    const re = /([\w:\-]+)\s*=\s*"([^"]*)"/g;
+    let last = 0;
+    let m;
+    while ((m = re.exec(attrStr)) !== null) {
+      if (m.index > last) out += escHtml(attrStr.slice(last, m.index));
+      out += ` <span class="xa">${escHtml(m[1])}</span>=&quot;<span class="xv">${escHtml(m[2])}</span>&quot;`;
+      last = re.lastIndex;
+    }
+    if (last < attrStr.length) out += escHtml(attrStr.slice(last));
+    return out;
+  }
+
+  let result = '';
+  let pos = 0;
+
+  while (pos < xmlStr.length) {
+    if (xmlStr[pos] !== '<') {
+      const end = xmlStr.indexOf('<', pos);
+      const text = xmlStr.slice(pos, end === -1 ? xmlStr.length : end);
+      if (text.trim()) {
+        result += `<span class="xd">${escHtml(text)}</span>`;
+      } else {
+        result += escHtml(text);
+      }
+      pos = (end === -1) ? xmlStr.length : end;
+      continue;
+    }
+
+    // Processing instruction
+    if (xmlStr.startsWith('<?', pos)) {
+      const end = xmlStr.indexOf('?>', pos);
+      const end2 = end === -1 ? xmlStr.length : end + 2;
+      result += `<span class="xp">${escHtml(xmlStr.slice(pos, end2))}</span>`;
+      pos = end2;
+      continue;
+    }
+
+    // Comment
+    if (xmlStr.startsWith('<!--', pos)) {
+      const end = xmlStr.indexOf('-->', pos);
+      const end2 = end === -1 ? xmlStr.length : end + 3;
+      result += `<span class="xc">${escHtml(xmlStr.slice(pos, end2))}</span>`;
+      pos = end2;
+      continue;
+    }
+
+    // Closing tag
+    if (xmlStr[pos + 1] === '/') {
+      const end = xmlStr.indexOf('>', pos);
+      const end2 = end === -1 ? xmlStr.length : end + 1;
+      const tag = xmlStr.slice(pos, end2);
+      const nm = tag.match(/^<\/([\w:\-]+)/);
+      if (nm) {
+        result += `<span class="xt">&lt;/</span><span class="xn">${escHtml(nm[1])}</span><span class="xt">&gt;</span>`;
+      } else {
+        result += escHtml(tag);
+      }
+      pos = end2;
+      continue;
+    }
+
+    // Opening / self-closing tag
+    const end = xmlStr.indexOf('>', pos);
+    const end2 = end === -1 ? xmlStr.length : end + 1;
+    const tag = xmlStr.slice(pos, end2);
+    const nm = tag.match(/^<([\w:\-]+)/);
+    if (nm) {
+      const name = nm[1];
+      const selfClose = tag.endsWith('/>');
+      const attrStr = tag.slice(1 + name.length, selfClose ? tag.length - 2 : tag.length - 1);
+      result += `<span class="xt">&lt;</span><span class="xn">${escHtml(name)}</span>${renderAttrs(attrStr)}<span class="xt">${selfClose ? '/&gt;' : '&gt;'}</span>`;
+    } else {
+      result += escHtml(tag);
+    }
+    pos = end2;
+  }
+
+  return result;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  XML FORMATTER (pretty-print)
+// ══════════════════════════════════════════════════════════════════════════
+function formatXML(xml) {
+  let indent = 0;
+  const lines = xml
+    .replace(/>\s*</g, '>\n<')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  return lines.map(line => {
+    let level = indent;
+    // Closing tag or self-closing: dedent before rendering
+    if (line.match(/^<\//) && indent > 0) { indent--; level = indent; }
+    const result = '  '.repeat(level) + line;
+    // Opening tag (not self-closing, not declaration, not closing, not comment end)
+    if (line.match(/^<[^\/!?]/) && !line.match(/\/>/) && !line.match(/<[^>]+>[^<]+<\/[^>]+>/)) {
+      indent++;
+    }
+    return result;
+  }).join('\n');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SOAP PARSING
+// ══════════════════════════════════════════════════════════════════════════
+function parseRequest(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+
+  // Check for parse error
+  const parseErr = doc.getElementsByTagName('parsererror');
+  if (parseErr.length > 0) {
+    return { error: 'XML-Parsing-Fehler: ' + parseErr[0].textContent.split('\n')[0] };
+  }
+
+  // Find SOAP Body
+  const bodyEls = doc.getElementsByTagNameNS(SOAP_NS, 'Body');
+  if (bodyEls.length === 0) {
+    return { error: 'Kein SOAP Body gefunden. Prüfen Sie ob der Namespace korrekt ist: ' + SOAP_NS };
+  }
+  const body = bodyEls[0];
+
+  // First child element of Body = operation
+  let opEl = null;
+  for (const child of body.children) {
+    opEl = child;
+    break;
+  }
+  if (!opEl) {
+    return { error: 'SOAP Body ist leer – keine Operation gefunden.' };
+  }
+
+  const localName = opEl.localName;
+  const ns = opEl.namespaceURI;
+
+  if (ns !== RW_NS) {
+    return { error: `Unbekannter Namespace: "${ns}". Erwartet: "${RW_NS}"` };
+  }
+  if (localName !== 'pruefeBuchbarkeit' && localName !== 'insertBeleg') {
+    return { error: `Unbekannte Operation: "${localName}". Unterstützt: pruefeBuchbarkeit, insertBeleg` };
+  }
+
+  // Find belegdaten
+  const belegdatenEl = opEl.getElementsByTagName('belegdaten')[0];
+  if (!belegdatenEl) {
+    return { error: `Element <belegdaten> nicht gefunden innerhalb von <${localName}>.` };
+  }
+
+  const belegdaten = parseBelegdaten(belegdatenEl);
+  return { operation: localName, belegdaten };
+}
+
+function parseBelegdaten(el) {
+  return {
+    status:        parseInt(getChildVal(el, 'status')) || 1,
+    belegart:      getChildVal(el, 'belegart'),
+    buchungsdatum: getChildVal(el, 'buchungsdatum'),
+    belegdatum:    getChildVal(el, 'belegdatum'),
+    konto:         getChildVal(el, 'konto'),
+    waehrung:      getChildVal(el, 'waehrung') || 'EUR',
+    beleg:         parseInt(getChildVal(el, 'beleg')) || 0,
+    belegbetrag:   parseFloat(getChildVal(el, 'belegbetrag')) || 0,
+    text:          getChildVal(el, 'text'),
+    positionen:    parsePositionen(el),
+  };
+}
+
+function parsePositionen(belegdatenEl) {
+  const result = [];
+  const posEls = belegdatenEl.getElementsByTagName('belPositionen');
+  for (const posEl of posEls) {
+    const aobjEls = posEl.getElementsByTagName('aobjKontierungen');
+    let kostenstelle = '';
+    let kstBetrag = 0;
+    if (aobjEls.length > 0) {
+      kostenstelle = getChildVal(aobjEls[0], 'aobj');
+      kstBetrag    = parseFloat(getChildVal(aobjEls[0], 'betrag')) || 0;
+    }
+    result.push({
+      positionsart:  getChildVal(posEl, 'positionsart'),
+      kontotitel:    getChildVal(posEl, 'kontotitel'),
+      betrag:        parseFloat(getChildVal(posEl, 'betrag')) || 0,
+      betragHW:      parseFloat(getChildVal(posEl, 'betragHW')) || 0,
+      soll:          getChildVal(posEl, 'soll') === 'true',
+      brutto:        getChildVal(posEl, 'brutto') === 'true',
+      ustSchluessel: getChildVal(posEl, 'ustSchluessel'),
+      kostenstelle,
+      kstBetrag,
+    });
+  }
+  return result;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SIMULATION: pruefeBuchbarkeit
+// ══════════════════════════════════════════════════════════════════════════
+function simulatePruefeBuchbarkeit(b) {
+  const code = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const msgs = []; // { stelle, ok, text }
+
+  // ── Stelle 1: Buchungsdatum im Buchungszeitraum ──
+  const d = new Date(b.buchungsdatum);
+  const now = new Date();
+  const diffYears = Math.abs((now - d) / (365.25 * 24 * 3600 * 1000));
+  if (isNaN(d.getTime())) {
+    code[0] = 1;
+    msgs.push({ stelle: 1, ok: false, text: `Buchungsdatum "${b.buchungsdatum}" ist kein gültiges Datum.` });
+  } else if (diffYears > 2) {
+    code[0] = 1;
+    msgs.push({ stelle: 1, ok: false, text: `Buchungsdatum ${b.buchungsdatum} liegt außerhalb des erlaubten Buchungszeitraums (maximal ±2 Jahre vom heutigen Datum).` });
+  } else {
+    msgs.push({ stelle: 1, ok: true, text: `Buchungsdatum ${b.buchungsdatum} liegt im erlaubten Buchungszeitraum.` });
+  }
+
+  // ── Stelle 2: Periode nicht geschlossen ──
+  const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+  if (!isNaN(d.getTime()) && diffMonths > 12) {
+    code[1] = 1;
+    msgs.push({ stelle: 2, ok: false, text: `Rechnungswesenperiode für ${b.buchungsdatum} ist geschlossen (mehr als 12 Monate in der Vergangenheit).` });
+  } else {
+    msgs.push({ stelle: 2, ok: true, text: 'Rechnungswesenperiode ist geöffnet.' });
+  }
+
+  // ── Stelle 3: Sachkonten existieren ──
+  const alleKonten = [b.konto, ...b.positionen.map(p => p.kontotitel)];
+  const unbekannt  = [...new Set(alleKonten.filter(k => !k || !ALLE_KONTEN.includes(k)))];
+  if (unbekannt.length > 0) {
+    code[2] = 1;
+    msgs.push({ stelle: 3, ok: false, text: `Nicht im System eingerichtete Konten: ${unbekannt.map(k => k ? `"${k}"` : '(leer)').join(', ')}.` });
+  } else {
+    msgs.push({ stelle: 3, ok: true, text: `Alle Sachkonten vorhanden und lesbar: ${[...new Set(alleKonten)].join(', ')}.` });
+  }
+
+  // ── Stelle 4: Konten bebuchbar ──
+  if (code[2] > 0) {
+    code[3] = 3;
+    msgs.push({ stelle: 4, ok: false, text: 'Bebuchbarkeit nicht prüfbar – mindestens ein Konto wurde nicht gefunden (siehe Stelle 3).' });
+  } else {
+    msgs.push({ stelle: 4, ok: true, text: 'Alle Konten erlauben Bebuchung (keine Sperren aktiv).' });
+  }
+
+  // ── Stelle 5: Abrechnungsobjekte (Kostenstellen) ──
+  if (code[2] > 0) {
+    code[4] = 3;
+    msgs.push({ stelle: 5, ok: false, text: 'Kostenstellen-Prüfung nicht möglich – Konten unbekannt (siehe Stelle 3).' });
+  } else {
+    const fehler5 = [];
+    for (const p of b.positionen) {
+      const typ = kontoTyp(p.kontotitel);
+      if (!typ) continue;
+      if (typ === 'bilanz' && p.kostenstelle) {
+        fehler5.push(`"${p.kontotitel}" ist ein Bilanzkonto – Kostenstelle darf nicht angegeben werden (eingetragen: ${p.kostenstelle}).`);
+      } else if (typ !== 'bilanz' && !p.kostenstelle) {
+        fehler5.push(`"${p.kontotitel}" ist ein Aufwandskonto – Kostenstelle ist Pflicht.`);
+      } else if (typ !== 'bilanz' && p.kostenstelle && !(p.kostenstelle in KOSTENSTELLEN)) {
+        fehler5.push(`Kostenstelle "${p.kostenstelle}" für "${p.kontotitel}" ist nicht eingerichtet. Gültige Kostenstellen: ${Object.keys(KOSTENSTELLEN).join(', ')}.`);
+      }
+    }
+    if (fehler5.length > 0) {
+      code[4] = 1;
+      fehler5.forEach(t => msgs.push({ stelle: 5, ok: false, text: t }));
+    } else {
+      const kstListe = b.positionen
+        .filter(p => p.kostenstelle && p.kostenstelle in KOSTENSTELLEN)
+        .map(p => `${p.kostenstelle} (${KOSTENSTELLEN[p.kostenstelle]})`);
+      msgs.push({ stelle: 5, ok: true, text: 'Kostenstellen-Zuordnung korrekt.' + (kstListe.length ? ' Verwendete Kostenstellen: ' + [...new Set(kstListe)].join(', ') + '.' : '') });
+    }
+  }
+
+  // ── Stelle 6: Kostenstellen bebuchbar ──
+  if (code[4] === 3) {
+    code[5] = 3;
+    msgs.push({ stelle: 6, ok: false, text: 'Bebuchbarkeit der Kostenstellen nicht prüfbar (siehe Stelle 5).' });
+  } else {
+    const gesperrt = b.positionen.filter(p => p.kostenstelle === GESPERRTE_KST);
+    if (gesperrt.length > 0) {
+      code[5] = 2;
+      msgs.push({ stelle: 6, ok: false, text: `Kostenstelle ${GESPERRTE_KST} hat eine Bebuchungssperre (Testkostenstelle).` });
+    } else {
+      msgs.push({ stelle: 6, ok: true, text: 'Alle Kostenstellen erlauben Bebuchung.' });
+    }
+  }
+
+  // ── Stelle 7: BAB-Zuordnung / USt-Konsistenz ──
+  const fehler7 = [];
+  for (const p of b.positionen) {
+    const typ = kontoTyp(p.kontotitel);
+    if (!typ) continue;
+    if (p.brutto && !p.ustSchluessel) {
+      fehler7.push(`"${p.kontotitel}": brutto=true, aber kein USt-Schlüssel angegeben.`);
+    }
+    if (p.ustSchluessel && typ === 'aufwand_ohneUSt') {
+      fehler7.push(`"${p.kontotitel}": Dieses Konto hat UStKontierung "keine Auswahl" – USt-Schlüssel (${p.ustSchluessel}) ist nicht erlaubt.`);
+    }
+  }
+  if (fehler7.length > 0) {
+    code[6] = 1;
+    fehler7.forEach(t => msgs.push({ stelle: 7, ok: false, text: t }));
+  } else {
+    msgs.push({ stelle: 7, ok: true, text: 'BAB-Zuordnung und USt-Konfiguration konsistent.' });
+  }
+
+  // ── Stelle 8: Hierarchieobjekte ──
+  msgs.push({ stelle: 8, ok: true, text: 'Keine Hierarchieobjekte konfiguriert – Prüfung entfällt.' });
+
+  // ── Stelle 9: Haushaltsstellen ──
+  msgs.push({ stelle: 9, ok: true, text: 'Keine Haushaltsstellen verwendet.' });
+
+  return { code, messages: msgs, ok: code.every(c => c === 0) };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SIMULATION: insertBeleg
+// ══════════════════════════════════════════════════════════════════════════
+function simulateInsertBeleg(b) {
+  // 1. Buchbarkeitsprüfung
+  const pruef = simulatePruefeBuchbarkeit(b);
+  if (!pruef.ok) {
+    const firstErr = pruef.messages.find(m => !m.ok);
+    return { success: false, fault: 'Server', msg: firstErr ? firstErr.text : 'Buchbarkeitsprüfung fehlgeschlagen.' };
+  }
+
+  // 2. Betragskonsistenz
+  const sumPos = b.positionen.reduce((s, p) => s + p.betrag, 0);
+  if (Math.abs(sumPos - Math.abs(b.belegbetrag)) > 0.005) {
+    return { success: false, fault: 'Server',
+      msg: `Der Belegbetrag ist unvollständig auf Positionen kontiert. Belegbetrag: ${fmtNum(Math.abs(b.belegbetrag))}, Summe Positionen: ${fmtNum(sumPos)}, Differenz: ${fmtNum(Math.abs(Math.abs(b.belegbetrag) - sumPos))}.` };
+  }
+
+  // 3. USt-Schlüssel-Format
+  for (const p of b.positionen) {
+    if (p.ustSchluessel && /^VSt \d%$/.test(p.ustSchluessel)) {
+      return { success: false, fault: 'Server',
+        msg: `Lookup nicht gefunden: "${p.ustSchluessel}". Führende Null erforderlich, z.B. "VSt 07%" statt "VSt 7%".` };
+    }
+  }
+
+  // 4. Nettobetrag-Prüfung bei Bruttobuchungen
+  for (const p of b.positionen) {
+    if (p.brutto && p.ustSchluessel && p.kstBetrag > 0) {
+      const pct = parseFloat(p.ustSchluessel.replace(/[^\d]/g, ''));
+      if (!isNaN(pct) && pct > 0) {
+        const expectedNet = Math.round(p.betrag / (1 + pct / 100) * 100) / 100;
+        if (Math.abs(p.kstBetrag - expectedNet) > 0.02) {
+          return { success: false, fault: 'Server',
+            msg: `Position "${p.kontotitel}": Der Betrag der Position ist unvollständig der Kostenrechnung zugeordnet. Erwarteter Nettobetrag: ${fmtNum(expectedNet)} (= ${fmtNum(p.betrag)} ÷ ${1 + pct / 100}), eingetragen: ${fmtNum(p.kstBetrag)}.` };
+        }
+      }
+    }
+  }
+
+  // 5. Bilanzkonto mit Kostenstelle (in insertBeleg ein Fault, nicht nur Prüffehler)
+  for (const p of b.positionen) {
+    if (kontoTyp(p.kontotitel) === 'bilanz' && p.kostenstelle) {
+      return { success: false, fault: 'Server',
+        msg: `Das Sachkonto ist nicht dem Basis-BAB des Abrechnungsobjekts zugeordnet: "${p.kontotitel}". Bilanzkonten dürfen keine aobjKontierungen haben.` };
+    }
+  }
+
+  // Erfolg
+  const belegNr = rnd(1000, 9999);
+  const belegID = rnd(10000, 99999);
+  sessionBelege.push({
+    belegNr, belegID,
+    belegart:      b.belegart,
+    buchungsdatum: b.buchungsdatum,
+    belegbetrag:   b.belegbetrag,
+    waehrung:      b.waehrung || 'EUR',
+    konto:         b.konto,
+    text:          b.text,
+  });
+  renderSession();
+  return { success: true, belegNr, belegID, belegart: b.belegart, buchungsdatum: b.buchungsdatum };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  RESPONSE XML BUILDER
+// ══════════════════════════════════════════════════════════════════════════
+const ENVELOPE_OPEN =
+  '<?xml version="1.0" encoding="UTF-8"?>\n' +
+  '<soapenv:Envelope\n' +
+  '  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"\n' +
+  '  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/">\n' +
+  '  <soapenv:Body>\n';
+const ENVELOPE_CLOSE = '  </soapenv:Body>\n</soapenv:Envelope>';
+
+function buildPruefResponse(code) {
+  return ENVELOPE_OPEN +
+    `    <rw:pruefeBuchbarkeitResponse>\n` +
+    `      <code>${code.join('')}</code>\n` +
+    `    </rw:pruefeBuchbarkeitResponse>\n` +
+    ENVELOPE_CLOSE;
+}
+
+function buildInsertResponse(r) {
+  return ENVELOPE_OPEN +
+    `    <rw:insertBelegResponse>\n` +
+    `      <belegKey>\n` +
+    `        <mandant>100</mandant>\n` +
+    `        <belegNr>${r.belegNr}</belegNr>\n` +
+    `        <buchungsdatum>${r.buchungsdatum}</buchungsdatum>\n` +
+    `        <belegart>${esc(r.belegart)}</belegart>\n` +
+    `        <belegID>${r.belegID}</belegID>\n` +
+    `      </belegKey>\n` +
+    `    </rw:insertBelegResponse>\n` +
+    ENVELOPE_CLOSE;
+}
+
+function buildFault(faultcode, faultstring) {
+  return ENVELOPE_OPEN +
+    `    <soapenv:Fault>\n` +
+    `      <faultcode>${esc(faultcode)}</faultcode>\n` +
+    `      <faultstring>${esc(faultstring)}</faultstring>\n` +
+    `    </soapenv:Fault>\n` +
+    ENVELOPE_CLOSE;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SUMMARY RENDERER
+// ══════════════════════════════════════════════════════════════════════════
+function renderPruefSummary(pruef) {
+  const badges = pruef.code.map((c, i) => {
+    const cls = c === 0 ? 's-ok' : 's-err';
+    return `<div class="s-badge ${cls}" title="${STELLE_LABELS[i]}">
+      <span class="s-nr">Stelle ${i + 1}</span>
+      <span class="s-val">${c}</span>
+      <span class="s-lbl">${STELLE_LABELS[i]}</span>
+    </div>`;
+  }).join('');
+
+  const fehlerMsgs = pruef.messages.filter(m => !m.ok);
+
+  let html = `<div class="stelle-row">${badges}</div>`;
+
+  if (fehlerMsgs.length === 0) {
+    html += `<div class="all-ok-box">✓ Prüfcode 000000000 – alle 9 Prüfungen bestanden.</div>`;
+  } else {
+    html += `<div class="fehler-list">`;
+    fehlerMsgs.forEach(m => {
+      html += `<div class="fehler-item">
+        <span class="fi-stelle">Stelle ${m.stelle}</span>
+        <span class="fi-text">${esc(m.text)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+function renderInsertSummary(result) {
+  if (result.success) {
+    return `<div class="result-box result-ok">
+      <strong>✓ Beleg erfolgreich eingefügt</strong>
+      <div class="result-detail">
+        <table>
+          <tr><td>Belegnummer:</td><td>${result.belegNr}</td></tr>
+          <tr><td>Interne belegID:</td><td>${result.belegID}</td></tr>
+          <tr><td>Belegart:</td><td>${esc(result.belegart || '–')}</td></tr>
+          <tr><td>Buchungsdatum:</td><td>${esc(result.buchungsdatum || '–')}</td></tr>
+        </table>
+      </div>
+    </div>`;
+  }
+  return `<div class="result-box result-fault">
+    <strong>✗ SOAP Fault – ${esc(result.fault || 'Server')}</strong>
+    <div class="result-detail">${esc(result.msg || 'Unbekannter Fehler.')}</div>
+  </div>`;
+}
+
+function renderFaultSummary(faultcode, faultstring) {
+  return `<div class="result-box result-fault">
+    <strong>✗ SOAP Fault – ${esc(faultcode)}</strong>
+    <div class="result-detail">${esc(faultstring)}</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SESSION LIST
+// ══════════════════════════════════════════════════════════════════════════
+function renderSession() {
+  const cnt = document.getElementById('sessionCnt');
+  const body = document.getElementById('sessionBody');
+  cnt.textContent = sessionBelege.length;
+
+  if (sessionBelege.length === 0) {
+    body.innerHTML = '<div class="session-empty">Noch keine Belege mit insertBeleg eingefügt.</div>';
+    return;
+  }
+
+  let html = `<table class="s-table">
+    <thead><tr>
+      <th>belegID</th><th>Belegnr.</th><th>Belegart</th>
+      <th>Buchungsdatum</th><th>Belegkonto</th><th>Betrag</th><th>Text</th>
+    </tr></thead><tbody>`;
+  [...sessionBelege].reverse().forEach(b => {
+    html += `<tr>
+      <td class="mono">${b.belegID}</td>
+      <td class="mono">${b.belegNr}</td>
+      <td><span class="tag-art">${esc(b.belegart || '–')}</span></td>
+      <td class="mono">${esc(b.buchungsdatum)}</td>
+      <td class="mono">${esc(b.konto)}</td>
+      <td class="mono">${fmtNum(b.belegbetrag)} ${esc(b.waehrung)}</td>
+      <td style="color:var(--text2)">${esc(b.text || '–')}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  HAUPTLOGIK: SENDEN
+// ══════════════════════════════════════════════════════════════════════════
+function handleSend() {
+  const xmlText = document.getElementById('requestEditor').value.trim();
+  if (!xmlText) {
+    showToast('Kein Request-XML vorhanden.');
+    return;
+  }
+
+  const parsed = parseRequest(xmlText);
+
+  // ── Parse-Fehler → Client Fault ──
+  if (parsed.error) {
+    const faultXML = buildFault('Client', parsed.error);
+    showResponse(faultXML, 'err');
+    showSummary(renderFaultSummary('Client', parsed.error));
+    return;
+  }
+
+  const b = parsed.belegdaten;
+
+  if (parsed.operation === 'pruefeBuchbarkeit') {
+    const pruef = simulatePruefeBuchbarkeit(b);
+    const responseXML = buildPruefResponse(pruef.code);
+    showResponse(responseXML, pruef.ok ? 'ok' : 'err');
+    showSummary(renderPruefSummary(pruef));
+
+  } else if (parsed.operation === 'insertBeleg') {
+    const result = simulateInsertBeleg(b);
+    if (result.success) {
+      const responseXML = buildInsertResponse(result);
+      showResponse(responseXML, 'ok');
+      showSummary(renderInsertSummary(result));
+    } else {
+      const faultXML = buildFault(result.fault, result.msg);
+      showResponse(faultXML, 'err');
+      showSummary(renderInsertSummary(result));
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════════════════════════════════
+function showResponse(xmlStr, status) {
+  const display = document.getElementById('responseDisplay');
+  const dot     = document.getElementById('respDot');
+  const meta    = document.getElementById('respMeta');
+
+  display.innerHTML = highlightXML(xmlStr);
+  display.parentElement.scrollTop = 0;
+
+  dot.className = 'status-dot ' + (status || '');
+  meta.textContent = new Date().toLocaleTimeString('de-DE');
+}
+
+function showSummary(html) {
+  const panel = document.getElementById('summaryPanel');
+  const body  = document.getElementById('summaryBody');
+  body.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+function updateReqMeta() {
+  const val  = document.getElementById('requestEditor').value;
+  const meta = document.getElementById('reqMeta');
+  meta.textContent = val.length > 0 ? val.length + ' Zeichen' : '';
+  document.getElementById('reqDot').className = 'status-dot' + (val.trim() ? ' pending' : '');
+}
+
+function clearAll() {
+  document.getElementById('requestEditor').value = '';
+  document.getElementById('responseDisplay').innerHTML =
+    '<span class="resp-placeholder">Noch keine Antwort. Request eingeben und »Senden« klicken.</span>';
+  document.getElementById('summaryPanel').style.display = 'none';
+  document.getElementById('reqMeta').textContent = '';
+  document.getElementById('reqDot').className = 'status-dot';
+  document.getElementById('respDot').className = 'status-dot';
+  document.getElementById('respMeta').textContent = '';
+}
+
+function onOpChange() {
+  // Optionally load example automatically on op change – user can trigger manually
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BEISPIEL-REQUESTS
+// ══════════════════════════════════════════════════════════════════════════
+const EXAMPLES = {
+  pruefeBuchbarkeit: `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/">
+  <soapenv:Body>
+    <rw:pruefeBuchbarkeit>
+      <belegdaten>
+        <status>1</status>
+        <belegart>Umbuchung</belegart>
+        <buchungsdatum>${todayISO()}</buchungsdatum>
+        <belegdatum>${todayISO()}</belegdatum>
+        <konto>LOHN-UND GEHALTSVER</konto>
+        <waehrung>EUR</waehrung>
+        <beleg>0</beleg>
+        <belegbetrag>5000.00</belegbetrag>
+        <text>Gehaltsbuchung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</text>
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>GEHÄLTER</kontotitel>
+          <betrag>5000.00</betrag>
+          <betragHW>5000.00</betragHW>
+          <soll>true</soll>
+          <brutto>false</brutto>
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>1010</aobj>
+            <betrag>5000.00</betrag>
+            <betragHW>5000.00</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+      </belegdaten>
+    </rw:pruefeBuchbarkeit>
+  </soapenv:Body>
+</soapenv:Envelope>`,
+
+  insertBeleg: `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/">
+  <soapenv:Body>
+    <rw:insertBeleg>
+      <belegdaten>
+        <status>1</status>
+        <belegart>Umbuchung</belegart>
+        <buchungsdatum>${todayISO()}</buchungsdatum>
+        <belegdatum>${todayISO()}</belegdatum>
+        <konto>VERB. LOHN U. GEHALT</konto>
+        <waehrung>EUR</waehrung>
+        <beleg>0</beleg>
+        <belegbetrag>112.54</belegbetrag>
+        <text>Reisekostenabrechnung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</text>
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>REISEKOSTEN</kontotitel>
+          <betrag>48.10</betrag>
+          <betragHW>48.10</betragHW>
+          <soll>true</soll>
+          <brutto>true</brutto>
+          <ustSchluessel>VSt 07%</ustSchluessel>
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>2010</aobj>
+            <betrag>44.95</betrag>
+            <betragHW>44.95</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>REISEKOSTEN</kontotitel>
+          <betrag>64.44</betrag>
+          <betragHW>64.44</betragHW>
+          <soll>true</soll>
+          <brutto>true</brutto>
+          <ustSchluessel>VSt 19%</ustSchluessel>
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>2010</aobj>
+            <betrag>54.15</betrag>
+            <betragHW>54.15</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+      </belegdaten>
+      <benutzeAutoKontierung>false</benutzeAutoKontierung>
+    </rw:insertBeleg>
+  </soapenv:Body>
+</soapenv:Envelope>`
+};
+
+function loadExample() {
+  const op = document.getElementById('opSelect').value;
+  document.getElementById('requestEditor').value = EXAMPLES[op] || '';
+  updateReqMeta();
+  showToast(`Beispiel für "${op}" geladen.`);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Keyboard shortcut: Ctrl+Enter = Senden ──
+document.getElementById('requestEditor').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); handleSend(); }
+});
+
+// ── Init ──
+renderSession();
+</script>
+</body>
+</html>

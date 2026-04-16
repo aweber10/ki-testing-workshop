@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  BEISPIEL 1 – pruefeBuchbarkeit (einfache Gehaltsbuchung)
+  ═══════════════════════════════════════════════════════════════════════════════
+  Szenario:
+    Monatliche Gehaltsbuchung aus SAGE.
+    Belegkonto: LOHN-UND GEHALTSVER (Verbindlichkeitskonto, wird im Haben belastet)
+    Position:   GEHÄLTER im Soll (Aufwand steigt)
+    Kostenstelle: 1010
+
+  Vorzeichen-Logik:
+    Belegkonto (LOHN-UND GEHALTSVER) wird im Haben belastet → belegbetrag POSITIV
+    Position (GEHÄLTER) wird im Soll gebucht → soll = true
+
+  Was erwartest du als Ergebnis?
+    ● Prüfcode "000000000" = alle 9 Prüfungen bestanden
+    ● Jede Stelle > 0 zeigt ein spezifisches Problem an (siehe XSD-Dokumentation)
+
+  Tipp für SoapUI:
+    - WSDL importieren: File → New SOAP Project → WSDL-URL eintragen
+    - Dieses XML in den Request-Editor kopieren
+    - Endpoint anpassen (Rechtsklick auf Request → Edit Endpoint)
+  ═══════════════════════════════════════════════════════════════════════════════
+-->
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+
+  <soapenv:Header>
+    <!--
+      WS-Security Header – Pflicht bei jedem Request.
+      Werte mit der Schulungsumgebung abstimmen.
+      Format Username: name=<user>,database=<db>,mandant=100,niederlassung=1
+    -->
+    <wsse:Security>
+      <wsse:UsernameToken>
+        <wsse:Username>name=schulung_user,database=schulung_db,mandant=100,niederlassung=1</wsse:Username>
+        <wsse:Password
+          Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">
+          schulung_passwort
+        </wsse:Password>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </soapenv:Header>
+
+  <soapenv:Body>
+    <rw:pruefeBuchbarkeit>
+      <belegdaten>
+
+        <!-- ── Buchungssteuerung ────────────────────────────────────── -->
+        <!-- Bei pruefeBuchbarkeit hat status keinen Effekt (kein Insert),
+             muss aber formal angegeben werden. -->
+        <status>1</status>
+
+        <!-- ── Belegkopf ────────────────────────────────────────────── -->
+        <belegart>Umbuchung</belegart>
+        <buchungsdatum>2025-03-31</buchungsdatum>
+        <belegdatum>2025-03-31</belegdatum>
+
+        <!-- Belegkonto = Verbindlichkeitskonto (Haben-Seite) -->
+        <konto>LOHN-UND GEHALTSVER</konto>
+        <waehrung>EUR</waehrung>
+
+        <!-- 0 = automatische Belegnummernvergabe -->
+        <beleg>0</beleg>
+
+        <!-- Belegbetrag: POSITIV, weil Belegkonto im HABEN belastet wird -->
+        <belegbetrag>5000.00</belegbetrag>
+
+        <text>Gehaltsbuchung März 2025</text>
+        <quellsystem>SAGE</quellsystem>
+
+        <!-- ── Positionen ────────────────────────────────────────────── -->
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+
+          <!-- Aufwandskonto für Gehälter -->
+          <kontotitel>GEHÄLTER</kontotitel>
+
+          <!-- Betrag positiv, Buchungsseite über "soll" gesteuert -->
+          <betrag>5000.00</betrag>
+          <betragHW>5000.00</betragHW>
+
+          <!-- true = Soll-Buchung (Aufwandskonto steigt) -->
+          <soll>true</soll>
+
+          <!-- false = kein USt-Handling; GEHÄLTER hat UStKontierung "keine Auswahl" -->
+          <brutto>false</brutto>
+
+          <!-- ustSchluessel NICHT senden für Konten ohne USt-Kontierung! -->
+
+          <text>Gehälter Abteilung Entwicklung</text>
+
+          <!-- Kostenstellen-Zuordnung (Pflicht bei BAB-Konten) -->
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>1010</aobj>
+            <!-- Betrag = Nettobetrag (hier identisch, da brutto=false) -->
+            <betrag>5000.00</betrag>
+            <betragHW>5000.00</betragHW>
+            <!-- erbt soll-Wert der Position -->
+            <soll>true</soll>
+          </aobjKontierungen>
+
+        </belPositionen>
+
+      </belegdaten>
+    </rw:pruefeBuchbarkeit>
+  </soapenv:Body>
+
+</soapenv:Envelope>

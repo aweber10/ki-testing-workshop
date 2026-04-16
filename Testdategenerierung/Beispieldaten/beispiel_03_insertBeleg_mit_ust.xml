@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  BEISPIEL 3 – insertBeleg mit Umsatzsteuer (Bruttobuchung, brutto=true)
+  ═══════════════════════════════════════════════════════════════════════════════
+  Szenario:
+    Reisekostenabrechnung mit zwei USt-Sätzen (7% und 19%).
+    Das Konto "REISEKOSTEN" hat UStKontierung = "Vorgangsabhängig" →
+    ustSchluessel MUSS mitgesendet werden.
+
+  Buchungslogik:
+    Belegkonto  VERB. LOHN U. GEHALT   Haben  112,54 € (belegbetrag positiv)
+
+    Position 1: REISEKOSTEN (Fahrtkosten, 7% VSt)
+      Bruttobetrag:  48,10 €
+      Nettobetrag:   44,95 € = 48,10 / 1,07  → betrag in aobjKontierung!
+      VSt-Anteil:     3,15 €  (bucht MACH intern auf Vorsteuerkonto)
+
+    Position 2: REISEKOSTEN (Hotel, 19% VSt)
+      Bruttobetrag:  64,44 €
+      Nettobetrag:   54,15 € = 64,44 / 1,19  → betrag in aobjKontierung!
+      VSt-Anteil:    10,29 €
+
+    Summe Brutto: 48,10 + 64,44 = 112,54 € = belegbetrag ✓
+
+  KRITISCHE REGEL für aobjKontierungen bei brutto=true:
+    ► aobjKontierung.betrag = NETTOBETRAG (nicht Brutto!)
+    ► Fehler bei Bruttobetrag: "Der Betrag der Position ist unvollständig
+      der Kostenrechnung zugeordnet"
+
+  USt-Schlüssel-Format:
+    ► "VSt 07%" (MIT führender Null bei einstelligen Sätzen!)
+    ► "VSt 19%"
+    ► FALSCH: "VSt 7%" → Fehler "Lookup nicht gefunden"
+
+  Übungsaufgabe für Teilnehmer:
+    a) Ändere in Position 1 das aobjKontierung.betrag auf 48.10 (Brutto statt Netto).
+       Welcher Fehler kommt?
+    b) Ändere ustSchluessel auf "VSt 7%" (ohne führende Null).
+       Welcher Fehler kommt?
+    c) Sende das Beispiel gegen pruefeBuchbarkeit (nur Operation wechseln).
+       Was gibt der Prüfcode zurück?
+  ═══════════════════════════════════════════════════════════════════════════════
+-->
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+
+  <soapenv:Header>
+    <wsse:Security>
+      <wsse:UsernameToken>
+        <wsse:Username>name=schulung_user,database=schulung_db,mandant=100,niederlassung=1</wsse:Username>
+        <wsse:Password
+          Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">
+          schulung_passwort
+        </wsse:Password>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </soapenv:Header>
+
+  <soapenv:Body>
+    <rw:insertBeleg>
+      <belegdaten>
+
+        <!-- ── Buchungssteuerung ────────────────────────────────────── -->
+        <status>1</status>
+
+        <!-- ── Belegkopf ────────────────────────────────────────────── -->
+        <belegart>Umbuchung</belegart>
+        <buchungsdatum>2025-03-31</buchungsdatum>
+        <belegdatum>2025-03-28</belegdatum>
+
+        <konto>VERB. LOHN U. GEHALT</konto>
+        <waehrung>EUR</waehrung>
+        <beleg>0</beleg>
+
+        <!--
+          Summe BRUTTO beider Positionen: 48,10 + 64,44 = 112,54
+          Belegkonto im Haben → belegbetrag POSITIV
+        -->
+        <belegbetrag>112.54</belegbetrag>
+
+        <text>Reisekostenabrechnung Müller März 2025</text>
+        <referenz>SAGE-2025-03-REISE-042</referenz>
+        <quellsystem>SAGE</quellsystem>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             Position 1: Fahrtkosten (7% VSt, brutto=true)
+             Brutto: 48,10 €
+             Netto:  44,95 € = 48,10 / 1,07  (gerundet auf 2 Dezimalstellen)
+             VSt:     3,15 €  (bucht MACH automatisch intern)
+             ═══════════════════════════════════════════════════════════ -->
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>REISEKOSTEN</kontotitel>
+
+          <!-- Bruttobetrag in betrag angeben bei brutto=true -->
+          <betrag>48.10</betrag>
+          <betragHW>48.10</betragHW>
+          <soll>true</soll>
+
+          <!--
+            brutto=true: MACH spaltet intern in Netto + VSt auf.
+            Das Vorsteuer-Konto bucht MACH automatisch.
+          -->
+          <brutto>true</brutto>
+
+          <!--
+            USt-Schlüssel MIT führender Null: "VSt 07%" nicht "VSt 7%"!
+            Lookuptext der Gruppe "USt" in MACH.
+          -->
+          <ustSchluessel>VSt 07%</ustSchluessel>
+
+          <text>Bahnticket Frankfurt-Berlin</text>
+
+          <!--
+            aobjKontierung: NETTOBETRAG angeben!
+            Netto = 48,10 / 1,07 = 44,953... → gerundet 44.95
+            Bei Bruttobetrag käme der Fehler:
+            "Der Betrag der Position ist unvollständig der Kostenrechnung zugeordnet"
+          -->
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>2010</aobj>
+            <betrag>44.95</betrag>
+            <betragHW>44.95</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             Position 2: Hotelkosten (19% VSt, brutto=true)
+             Brutto: 64,44 €
+             Netto:  54,15 € = 64,44 / 1,19  (gerundet)
+             VSt:    10,29 €
+             ═══════════════════════════════════════════════════════════ -->
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>REISEKOSTEN</kontotitel>
+
+          <betrag>64.44</betrag>
+          <betragHW>64.44</betragHW>
+          <soll>true</soll>
+          <brutto>true</brutto>
+          <ustSchluessel>VSt 19%</ustSchluessel>
+
+          <text>Hotel Mercure Berlin 2 Nächte</text>
+
+          <!-- Nettobetrag für Kostenstellen-Zuordnung: 64,44 / 1,19 = 54,15 -->
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>2010</aobj>
+            <betrag>54.15</betrag>
+            <betragHW>54.15</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+
+      </belegdaten>
+
+      <benutzeAutoKontierung>false</benutzeAutoKontierung>
+
+    </rw:insertBeleg>
+  </soapenv:Body>
+
+</soapenv:Envelope>

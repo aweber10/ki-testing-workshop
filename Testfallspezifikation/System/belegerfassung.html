@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rechnungswesen – Belegerfassung (Schulung)</title>
+<style>
+  :root {
+    --bg:        #ece8e1;
+    --surface:   #ffffff;
+    --surface2:  #f6f3ee;
+    --surface3:  #edeae4;
+    --border:    #d5cfc6;
+    --border2:   #bfb8ae;
+    --text:      #1a2035;
+    --text2:     #48556a;
+    --text3:     #8a95a6;
+    --amber:     #1d3a6e;
+    --amber2:    #2d4f8a;
+    --green:     #1a6b3c;
+    --red:       #b71c1c;
+    --blue:      #1756a0;
+    --purple:    #5b3fa6;
+    --mono:      'Courier New', 'Lucida Console', monospace;
+    --sans:      'Trebuchet MS', 'Calibri', 'Lucida Sans', sans-serif;
+    --radius:    6px;
+    --shadow:    0 4px 24px rgba(0,0,0,.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-logo {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--amber);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid var(--amber);
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: .3px;
+  }
+  .header-badge {
+    font-size: 10px;
+    background: var(--surface3);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    letter-spacing: 1px;
+  }
+  .header-spacer { flex: 1; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font: 13px/1 var(--sans);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-primary   { background: var(--amber);  color: #fff; border-color: var(--amber);  }
+  .btn-primary:not(:disabled):hover   { background: var(--amber2); border-color: var(--amber2); }
+  .btn-secondary { background: transparent; color: var(--text2); border-color: var(--border2); }
+  .btn-secondary:not(:disabled):hover { background: var(--surface3); border-color: var(--border2); color: var(--text); }
+  .btn-check  { background: var(--surface3); color: var(--blue);  border-color: var(--blue);  }
+  .btn-check:not(:disabled):hover  { background: rgba(23,86,160,.08);  }
+  .btn-stapel { background: var(--green);  color: #ffffff; border-color: var(--green); font-weight: 700; }
+  .btn-stapel:not(:disabled):hover { filter: brightness(1.1); }
+  .btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
+  .btn-danger:not(:disabled):hover { background: rgba(183,28,28,.08); }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-icon { padding: 5px 8px; }
+  .icon { font-style: normal; font-size: 14px; }
+
+  /* ── Layout ── */
+  .main-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+
+  /* ── Action Bar ── */
+  .action-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .action-bar .spacer { flex: 1; }
+  #stapelHint {
+    font-size: 12px;
+    color: var(--text3);
+    font-style: italic;
+  }
+
+  /* ── Modal Overlay ── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(3px);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    overflow-y: auto;
+  }
+  .overlay.open { display: flex; }
+
+  /* ── Modal ── */
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 820px;
+    box-shadow: var(--shadow);
+    animation: slideIn .2s ease;
+  }
+  @keyframes slideIn { from { transform: translateY(-16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal-header h2 { font-size: 16px; font-weight: 600; flex: 1; }
+  .modal-body { padding: 20px 22px; }
+  .modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* ── Form ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    margin-bottom: 20px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .form-group label .req { color: var(--amber); margin-left: 2px; }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font: 14px var(--sans);
+    padding: 7px 10px;
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--amber);
+    background: var(--surface3);
+  }
+  .form-group input::placeholder { color: var(--text3); }
+  .form-group select option { background: var(--surface2); }
+  .hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* ── Positionen-Tabelle im Formular ── */
+  .pos-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .pos-table-wrap { overflow-x: auto; margin-bottom: 10px; }
+  .pos-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .pos-table th {
+    background: var(--surface3);
+    color: var(--text3);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 7px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .pos-table td {
+    padding: 4px 4px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .pos-table tr:last-child td { border-bottom: none; }
+  .pos-table input, .pos-table select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font: 13px var(--sans);
+    padding: 5px 7px;
+    width: 100%;
+    min-width: 60px;
+  }
+  .pos-table input:focus, .pos-table select:focus {
+    outline: none;
+    border-color: var(--amber);
+  }
+  .pos-table input[type="checkbox"] { width: auto; min-width: unset; }
+  .pos-table .col-del { width: 36px; text-align: center; }
+  .pos-table .num { font-family: var(--mono); font-size: 12px; }
+  .sum-row {
+    display: flex; align-items: center;
+    gap: 16px;
+    padding: 8px 0;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .sum-row .sum-val {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--amber);
+    font-weight: 700;
+  }
+  .sum-match { color: var(--green); font-size: 11px; }
+  .sum-mismatch { color: var(--red); font-size: 11px; }
+
+  /* ── Belege-Liste ── */
+  .belege-list { display: flex; flex-direction: column; gap: 10px; }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+    background: var(--surface);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+  }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── Beleg-Karte ── */
+  .beleg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .beleg-card:hover { border-color: var(--border2); }
+  .beleg-card.status-ok    { border-left: 3px solid var(--green); }
+  .beleg-card.status-error { border-left: 3px solid var(--red); }
+  .beleg-card.status-stapel { border-left: 3px solid var(--purple); }
+  .beleg-card.status-fail-stapel { border-left: 3px solid var(--red); border-left-width: 4px; }
+
+  .beleg-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .beleg-head:hover { background: var(--surface2); }
+
+  .beleg-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 28px;
+  }
+  .beleg-art {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: rgba(29,58,110,.08);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .beleg-konto {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .beleg-datum { font-size: 12px; color: var(--text3); }
+  .beleg-betrag {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .beleg-text { font-size: 12px; color: var(--text3); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .beleg-status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-new      { background: var(--surface3); color: var(--text3); border: 1px solid var(--border2); }
+  .badge-ok       { background: rgba(26,107,60,.1);   color: var(--green); border: 1px solid rgba(26,107,60,.3);  }
+  .badge-error    { background: rgba(183,28,28,.08);  color: var(--red);   border: 1px solid rgba(183,28,28,.25); }
+  .badge-stapel   { background: rgba(91,63,166,.1);   color: var(--purple); border: 1px solid rgba(91,63,166,.3);   }
+  .badge-fail-st  { background: rgba(183,28,28,.1);  color: var(--red);   border: 1px solid rgba(183,28,28,.4);  font-weight: 700; }
+
+  .beleg-head-actions { display: flex; gap: 6px; margin-left: 4px; }
+  .expand-icon { color: var(--text3); font-size: 10px; transition: transform .2s; }
+  .expand-icon.open { transform: rotate(180deg); }
+
+  /* ── Beleg-Detail ── */
+  .beleg-detail { display: none; border-top: 1px solid var(--border); }
+  .beleg-detail.open { display: block; }
+
+  .beleg-detail-inner { padding: 14px 16px; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px 16px;
+    margin-bottom: 16px;
+  }
+  .detail-field label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .detail-field span {
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+
+  /* ── Prüfergebnis ── */
+  .pruef-result {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .pruef-code-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .pruef-code-label {
+    font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .code-display {
+    display: flex; gap: 2px;
+  }
+  .code-digit {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    width: 22px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+  .code-digit.ok  { background: rgba(26,107,60,.1);   color: var(--green); border-color: rgba(26,107,60,.3);  }
+  .code-digit.err { background: rgba(183,28,28,.1);   color: var(--red);   border-color: rgba(183,28,28,.3);  }
+
+  .pruef-messages { display: flex; flex-direction: column; gap: 4px; }
+  .pruef-msg {
+    display: flex; align-items: flex-start; gap: 6px;
+    font-size: 12px;
+  }
+  .pruef-msg .dot { margin-top: 3px; flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; }
+  .pruef-msg.ok  .dot { background: var(--green); }
+  .pruef-msg.err .dot { background: var(--red); }
+  .pruef-msg.ok  span { color: var(--text3); }
+  .pruef-msg.err span { color: var(--text); font-weight: 500; }
+
+  /* ── Stapel-Ergebnis ── */
+  .stapel-result {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .stapel-result.success { border-left: 3px solid var(--green); color: var(--green); background: rgba(26,107,60,.07); }
+  .stapel-result.fail    { border-left: 3px solid var(--red);   color: var(--red);   background: rgba(183,28,28,.06); }
+
+  /* ── Positionen im Detail ── */
+  .pos-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 0;
+  }
+  .pos-detail-table th {
+    background: var(--surface3);
+    color: var(--text3);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .pos-detail-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .pos-detail-table tr:last-child td { border-bottom: none; }
+  .pos-detail-table .num { font-family: var(--mono); color: var(--amber); }
+  .soll-badge  { color: var(--red);  font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+  .haben-badge { color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    max-width: 340px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .3s ease;
+    pointer-events: none;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.info    { background: var(--text);     color: #fff;        border: 1px solid var(--text2);   }
+  #toast.success { background: rgba(26,107,60,.15); color: var(--green); border: 1px solid rgba(26,107,60,.4);  }
+  #toast.error   { background: rgba(183,28,28,.12); color: var(--red);   border: 1px solid rgba(183,28,28,.35); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">RW</div>
+  <h1>Rechnungswesen &ndash; Belegerfassung</h1>
+  <span class="header-badge">SCHULUNG v1.0</span>
+  <div class="header-spacer"></div>
+</header>
+
+<div class="main-wrap">
+
+  <div class="action-bar">
+    <button class="btn btn-primary" onclick="openModal()">
+      <span class="icon">＋</span> Neuer Beleg
+    </button>
+    <div class="spacer"></div>
+    <button class="btn btn-check" id="btnPruefen" onclick="pruefeBelege()" disabled>
+      <span class="icon">⬡</span> Buchbarkeit prüfen
+    </button>
+    <button class="btn btn-stapel" id="btnStapel" disabled onclick="inStapelSchreiben()">
+      <span class="icon">▶</span> In Stapel schreiben
+    </button>
+    <span id="stapelHint">Belege anlegen und prüfen, um fortzufahren.</span>
+  </div>
+
+  <div class="section-title">Erfasste Belege</div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">📋</div>
+    <p>Noch keine Belege erfasst.<br>Klicke auf „Neuer Beleg" um zu beginnen.</p>
+  </div>
+  <div class="belege-list" id="belegeList"></div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     MODAL – Beleg anlegen / bearbeiten
+════════════════════════════════════════════ -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+<div class="modal" id="modal">
+  <div class="modal-header">
+    <h2 id="modalTitle">Neuer Beleg</h2>
+    <button class="btn btn-secondary btn-sm" onclick="closeModal()">✕ Schließen</button>
+  </div>
+  <div class="modal-body">
+
+    <!-- Belegkopf -->
+    <div class="section-title">Belegkopf</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Belegart <span class="req">*</span></label>
+        <select id="f_belegart">
+          <option value="">– bitte wählen –</option>
+          <option>Umbuchung</option>
+          <option>Eingangsrechnung</option>
+          <option>Ausgangsrechnung</option>
+          <option>Gutschrift</option>
+          <option>Sammelbeleg</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status <span class="req">*</span></label>
+        <select id="f_status">
+          <option value="1">1 – Nur speichern</option>
+          <option value="2">2 – In Stapel</option>
+          <option value="3">3 – Sofort buchen</option>
+        </select>
+        <span class="hint">Für Tests: Status 1 empfohlen</span>
+      </div>
+      <div class="form-group">
+        <label>Buchungsdatum <span class="req">*</span></label>
+        <input type="date" id="f_buchungsdatum">
+      </div>
+      <div class="form-group">
+        <label>Belegdatum <span class="req">*</span></label>
+        <input type="date" id="f_belegdatum">
+      </div>
+      <div class="form-group">
+        <label>Belegkonto (Kontotitel) <span class="req">*</span></label>
+        <input type="text" id="f_konto" placeholder="z.B. LOHN-UND GEHALTSVER">
+        <span class="hint">Kontotitel des Sammelkontos (Haben-Seite)</span>
+      </div>
+      <div class="form-group">
+        <label>Währung <span class="req">*</span></label>
+        <select id="f_waehrung">
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="CHF">CHF</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Belegnummer</label>
+        <input type="number" id="f_beleg" value="0" min="0">
+        <span class="hint">0 = automatische Vergabe</span>
+      </div>
+      <div class="form-group">
+        <label>Belegbetrag <span class="req">*</span></label>
+        <input type="number" id="f_belegbetrag" step="0.01" placeholder="z.B. 5000.00">
+        <span class="hint">Positiv = Belegkonto im Haben</span>
+      </div>
+      <div class="form-group full">
+        <label>Belegtext</label>
+        <input type="text" id="f_text" placeholder="z.B. Gehaltsbuchung März 2025">
+      </div>
+      <div class="form-group">
+        <label>Referenz</label>
+        <input type="text" id="f_referenz" placeholder="z.B. BU-2025-03-001">
+      </div>
+      <div class="form-group">
+        <label>Quellsystem</label>
+        <input type="text" id="f_quellsystem" placeholder="z.B. LOHN" maxlength="8">
+      </div>
+    </div>
+
+    <!-- Positionen -->
+    <div class="pos-section-label">
+      Belegpositionen
+      <button class="btn btn-secondary btn-sm" onclick="addPosition()">＋ Position hinzufügen</button>
+    </div>
+    <div class="pos-table-wrap">
+      <table class="pos-table" id="posTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th style="min-width:110px">Positionsart *</th>
+            <th style="min-width:130px">Kontotitel *</th>
+            <th style="min-width:90px">Betrag *</th>
+            <th style="min-width:80px">BetragHW *</th>
+            <th>Soll</th>
+            <th>Brutto</th>
+            <th style="min-width:90px">USt-Schlüssel</th>
+            <th style="min-width:100px">Kostenstelle</th>
+            <th style="min-width:80px">KSt-Betrag</th>
+            <th style="min-width:130px">Positionstext</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="posBody"></tbody>
+      </table>
+    </div>
+    <div class="sum-row" id="sumRow">
+      <span>Summe Positionen:</span>
+      <span class="sum-val" id="sumDisplay">0,00</span>
+      <span id="sumCheck"></span>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+    <button class="btn btn-primary" onclick="saveBeleg()">Beleg speichern</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+//  DATENMODELL
+// ══════════════════════════════════════════════════════════════════════════
+let belege = [];
+let editId = null;
+let posCounter = 0;
+
+// ══════════════════════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════════════════════
+function openModal(id = null) {
+  editId = id;
+  posCounter = 0;
+  document.getElementById('posBody').innerHTML = '';
+
+  if (id !== null) {
+    const b = belege.find(x => x.id === id);
+    document.getElementById('modalTitle').textContent = 'Beleg bearbeiten';
+    document.getElementById('f_belegart').value       = b.belegart;
+    document.getElementById('f_status').value         = b.status;
+    document.getElementById('f_buchungsdatum').value  = b.buchungsdatum;
+    document.getElementById('f_belegdatum').value     = b.belegdatum;
+    document.getElementById('f_konto').value          = b.konto;
+    document.getElementById('f_waehrung').value       = b.waehrung;
+    document.getElementById('f_beleg').value          = b.beleg;
+    document.getElementById('f_belegbetrag').value    = b.belegbetrag;
+    document.getElementById('f_text').value           = b.text || '';
+    document.getElementById('f_referenz').value       = b.referenz || '';
+    document.getElementById('f_quellsystem').value    = b.quellsystem || '';
+    b.positionen.forEach(p => addPosition(p));
+  } else {
+    document.getElementById('modalTitle').textContent = 'Neuer Beleg';
+    document.getElementById('f_belegart').value       = '';
+    document.getElementById('f_status').value         = '1';
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('f_buchungsdatum').value  = today;
+    document.getElementById('f_belegdatum').value     = today;
+    document.getElementById('f_konto').value          = '';
+    document.getElementById('f_waehrung').value       = 'EUR';
+    document.getElementById('f_beleg').value          = '0';
+    document.getElementById('f_belegbetrag').value    = '';
+    document.getElementById('f_text').value           = '';
+    document.getElementById('f_referenz').value       = '';
+    document.getElementById('f_quellsystem').value    = '';
+    addPosition();
+  }
+  updateSum();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  clearModalError();
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  POSITIONEN IM FORMULAR
+// ══════════════════════════════════════════════════════════════════════════
+function addPosition(data = null) {
+  const idx = posCounter++;
+  const tbody = document.getElementById('posBody');
+  const tr = document.createElement('tr');
+  tr.dataset.idx = idx;
+
+  const d = data || {
+    positionsart: 'Sachbuchung', kontotitel: '', betrag: '', betragHW: '',
+    soll: true, brutto: false, ustSchluessel: '', kostenstelle: '', kstBetrag: '', text: ''
+  };
+
+  tr.innerHTML = `
+    <td style="color:var(--text3);font-size:11px;padding:4px 6px;font-family:var(--mono)">${idx+1}</td>
+    <td><select onchange="updateSum()" data-field="positionsart">
+      <option ${d.positionsart==='Sachbuchung'?'selected':''}>Sachbuchung</option>
+      <option ${d.positionsart==='Debitorenposten'?'selected':''}>Debitorenposten</option>
+      <option ${d.positionsart==='Kreditorenposten'?'selected':''}>Kreditorenposten</option>
+    </select></td>
+    <td><input type="text"   data-field="kontotitel"   value="${d.kontotitel}"   placeholder="z.B. GEHÄLTER" onchange="updateSum()"></td>
+    <td><input type="number" data-field="betrag"       value="${d.betrag}"       step="0.01" placeholder="0.00" oninput="syncHW(this);updateSum()" class="num"></td>
+    <td><input type="number" data-field="betragHW"     value="${d.betragHW}"     step="0.01" placeholder="0.00" oninput="updateSum()" class="num"></td>
+    <td style="text-align:center"><input type="checkbox" data-field="soll"   ${d.soll?'checked':''}></td>
+    <td style="text-align:center"><input type="checkbox" data-field="brutto" ${d.brutto?'checked':''}></td>
+    <td><input type="text" data-field="ustSchluessel" value="${d.ustSchluessel}" placeholder="VSt 19%"></td>
+    <td><input type="text" data-field="kostenstelle"  value="${d.kostenstelle}"  placeholder="z.B. 1010"></td>
+    <td><input type="number" data-field="kstBetrag"   value="${d.kstBetrag}"    step="0.01" placeholder="0.00" class="num"></td>
+    <td><input type="text"   data-field="text"        value="${d.text||''}"      placeholder="Freitext"></td>
+    <td class="col-del"><button class="btn btn-danger btn-icon btn-sm" onclick="removePosition(this)" title="Position entfernen">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  updateSum();
+}
+
+function removePosition(btn) {
+  const tr = btn.closest('tr');
+  tr.remove();
+  // renumber
+  document.querySelectorAll('#posBody tr').forEach((r, i) => {
+    r.cells[0].textContent = i + 1;
+  });
+  updateSum();
+}
+
+function syncHW(input) {
+  const tr = input.closest('tr');
+  const hw = tr.querySelector('[data-field="betragHW"]');
+  hw.value = input.value;
+}
+
+function updateSum() {
+  let sum = 0;
+  document.querySelectorAll('#posBody tr').forEach(tr => {
+    const v = parseFloat(tr.querySelector('[data-field="betrag"]').value) || 0;
+    sum += v;
+  });
+  document.getElementById('sumDisplay').textContent = fmtNum(sum);
+  const belegbetrag = Math.abs(parseFloat(document.getElementById('f_belegbetrag').value) || 0);
+  const chk = document.getElementById('sumCheck');
+  if (belegbetrag > 0) {
+    if (Math.abs(sum - belegbetrag) < 0.005) {
+      chk.textContent = '✓ Stimmt überein';
+      chk.className = 'sum-match';
+    } else {
+      chk.textContent = `✗ Differenz: ${fmtNum(belegbetrag - sum)}`;
+      chk.className = 'sum-mismatch';
+    }
+  } else {
+    chk.textContent = '';
+  }
+}
+
+function readPositionen() {
+  const rows = [];
+  document.querySelectorAll('#posBody tr').forEach(tr => {
+    const kontotitel = tr.querySelector('[data-field="kontotitel"]').value.trim();
+    const betrag     = parseFloat(tr.querySelector('[data-field="betrag"]').value) || 0;
+    // Leere Zeilen (kein Kontotitel UND kein Betrag) werden stillschweigend übersprungen
+    if (!kontotitel && betrag === 0) return;
+    rows.push({
+      positionsart:  tr.querySelector('[data-field="positionsart"]').value,
+      kontotitel:    kontotitel,
+      betrag:        betrag,
+      betragHW:      parseFloat(tr.querySelector('[data-field="betragHW"]').value) || 0,
+      soll:          tr.querySelector('[data-field="soll"]').checked,
+      brutto:        tr.querySelector('[data-field="brutto"]').checked,
+      ustSchluessel: tr.querySelector('[data-field="ustSchluessel"]').value.trim(),
+      kostenstelle:  tr.querySelector('[data-field="kostenstelle"]').value.trim(),
+      kstBetrag:     parseFloat(tr.querySelector('[data-field="kstBetrag"]').value) || 0,
+      text:          tr.querySelector('[data-field="text"]').value.trim(),
+    });
+  });
+  return rows;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BELEG SPEICHERN
+// ══════════════════════════════════════════════════════════════════════════
+function modalError(msg) {
+  let el = document.getElementById('modalError');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'modalError';
+    el.style.cssText = 'background:rgba(224,90,106,.15);border:1px solid rgba(224,90,106,.4);color:var(--red);border-radius:6px;padding:9px 14px;font-size:13px;font-weight:500;margin-bottom:14px;';
+    document.querySelector('.modal-body').prepend(el);
+  }
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function clearModalError() {
+  const el = document.getElementById('modalError');
+  if (el) el.style.display = 'none';
+}
+
+function saveBeleg() {
+  clearModalError();
+  const belegart      = document.getElementById('f_belegart').value;
+  const buchungsdatum = document.getElementById('f_buchungsdatum').value;
+  const belegdatum    = document.getElementById('f_belegdatum').value;
+  const konto         = document.getElementById('f_konto').value.trim();
+  const belegbetragRaw= document.getElementById('f_belegbetrag').value;
+  const belegbetrag   = parseFloat(belegbetragRaw);
+
+  if (!belegart)           return modalError('Bitte Belegart auswählen.');
+  if (!buchungsdatum)      return modalError('Buchungsdatum fehlt.');
+  if (!belegdatum)         return modalError('Belegdatum fehlt.');
+  if (!konto)              return modalError('Belegkonto (Kontotitel) fehlt.');
+  if (belegbetragRaw === '' || isNaN(belegbetrag))
+                           return modalError('Belegbetrag fehlt oder ist ungültig.');
+
+  const positionen = readPositionen();
+  if (positionen.length === 0)
+    return modalError('Mindestens eine ausgefüllte Position erforderlich (Kontotitel + Betrag).');
+  for (const p of positionen) {
+    if (!p.kontotitel)  return modalError(`Eine Position hat keinen Kontotitel.`);
+    if (p.betrag === 0) return modalError(`Position "${p.kontotitel}": Betrag ist 0.`);
+  }
+
+  const data = {
+    id:            editId !== null ? editId : Date.now(),
+    belegart:      belegart,
+    status:        parseInt(document.getElementById('f_status').value),
+    buchungsdatum: buchungsdatum,
+    belegdatum:    belegdatum,
+    konto:         konto,
+    waehrung:      document.getElementById('f_waehrung').value,
+    beleg:         parseInt(document.getElementById('f_beleg').value) || 0,
+    belegbetrag:   belegbetrag,
+    text:          document.getElementById('f_text').value.trim(),
+    referenz:      document.getElementById('f_referenz').value.trim(),
+    quellsystem:   document.getElementById('f_quellsystem').value.trim(),
+    positionen:    positionen,
+    pruefStatus:   'new',
+    pruefCode:     null,
+    pruefMessages: [],
+    stapelStatus:  null,
+    stapelMsg:     null,
+  };
+
+  if (editId !== null) {
+    const idx = belege.findIndex(x => x.id === editId);
+    belege[idx] = data;
+    toast('Beleg aktualisiert.', 'success');
+  } else {
+    belege.push(data);
+    toast('Beleg hinzugefügt.', 'success');
+  }
+
+  closeModal();
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BELEG LÖSCHEN
+//  Kein confirm() – wird von Browsern bei file:// oft stumm blockiert.
+//  Stattdessen: erster Klick wechselt Button in Bestätigungsmodus,
+//  zweiter Klick löscht tatsächlich.
+// ══════════════════════════════════════════════════════════════════════════
+// Kein direktes DOM-Styling: Zustand in Set, render() zeichnet Button neu.
+const deleteConfirmState = new Set();
+
+function deleteBeleg(id) {
+  if (!deleteConfirmState.has(id)) {
+    deleteConfirmState.add(id);
+    setTimeout(() => { if (deleteConfirmState.delete(id)) render(false); }, 3000);
+    render(false);   // zeigt roten "Bestätigen"-Button
+    return;
+  }
+  deleteConfirmState.delete(id);
+  belege = belege.filter(x => x.id !== id);
+  toast('Beleg gelöscht.', 'info');
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SIMULATION: pruefeBuchbarkeit
+// ══════════════════════════════════════════════════════════════════════════
+const STELLE_LABELS = [
+  'Buchungsdatum im Buchungszeitraum',
+  'Periode nicht geschlossen',
+  'Sachkonten existieren und sind lesbar',
+  'Konten erlauben Bebuchung',
+  'Abrechnungsobjekte existent und Basisobjekte',
+  'Abrechnungsobjekte erlauben Bebuchung',
+  'Sachkonten im Basis-BAB der Abrechnungsobjekte',
+  'Sachkonten im BAB der Hierarchieobjekte',
+  'Haushaltsstellen vorhanden'
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+//  STAMMDATEN: Konten und Kostenstellen
+//  Nur diese Werte werden von der Prüfung akzeptiert.
+// ══════════════════════════════════════════════════════════════════════════
+
+// Bilanzkonten: dürfen bebuchbar werden, aber KEINE Kostenstelle
+const BILANZKONTEN = [
+  'LOHN-UND GEHALTSVER',
+  'VERB. LOHN U. GEHALT',
+  'VERB. SV',
+  'VERB. LOHN&KISTEUER',
+];
+
+// Aufwandskonten ohne USt (UStKontierung = "keine Auswahl")
+// → Kostenstelle Pflicht, kein ustSchluessel erlaubt
+const AUFWANDSKONTEN_OHNE_UST = [
+  'GEHÄLTER',
+  'AUSBILDUNGSVERGÜTUNG',
+  '13. MONATSGEHALT',
+  'URLAUBSGELD',
+  'LEISTUNGSPRÄMIE',
+  'JUBILÄUMSZUWENDUNG',
+  'GESETZL. SOZ. AUFW.',
+  'PAUSCH. LOHNSTEUER',
+];
+
+// Aufwandskonten mit USt (UStKontierung = "Vorgangsabhängig")
+// → Kostenstelle Pflicht, ustSchluessel erlaubt/erforderlich bei brutto=true
+const AUFWANDSKONTEN_MIT_UST = [
+  'REISEKOSTEN',
+  'BÜROMATERIAL',
+  'WERBEKOSTEN',
+];
+
+// Alle bekannten Konten (Belegkonto darf aus allen drei Gruppen stammen)
+const ALLE_KONTEN = [...BILANZKONTEN, ...AUFWANDSKONTEN_OHNE_UST, ...AUFWANDSKONTEN_MIT_UST];
+
+// Gültige Kostenstellen (mit Bezeichnung für sprechende Fehlermeldungen)
+const KOSTENSTELLEN = {
+  '1010': 'Entwicklung',
+  '1020': 'Ausbildung',
+  '1030': 'Verwaltung',
+  '2010': 'Vertrieb',
+  '2020': 'Marketing',
+  '3050': 'Geschäftsführung',
+};
+// Gesperrte Kostenstelle (für Negativ-Tests)
+const GESPERRTE_KST = '9999';
+
+// Hilfsfunktionen
+function kontoInfo(titel) {
+  if (BILANZKONTEN.includes(titel))           return { typ: 'bilanz',        ustOk: false };
+  if (AUFWANDSKONTEN_OHNE_UST.includes(titel)) return { typ: 'aufwand_ohneUSt', ustOk: false };
+  if (AUFWANDSKONTEN_MIT_UST.includes(titel))  return { typ: 'aufwand_mitUSt',  ustOk: true  };
+  return null; // unbekannt
+}
+function istBilanzkonto(titel)     { return BILANZKONTEN.includes(titel); }
+function istAufwandskonto(titel)   { return AUFWANDSKONTEN_OHNE_UST.includes(titel) || AUFWANDSKONTEN_MIT_UST.includes(titel); }
+function kstGueltig(kst)           { return kst in KOSTENSTELLEN; }
+
+// ══════════════════════════════════════════════════════════════════════════
+function simulatePruefeBuchbarkeit(b) {
+  const code = [0,0,0,0,0,0,0,0,0];
+  const msgs = [];
+
+  // ── Stelle 1: Buchungsdatum im Buchungszeitraum (±2 Jahre) ──────────────
+  const d = new Date(b.buchungsdatum);
+  const now = new Date();
+  const diffYears = Math.abs((now - d) / (1000 * 60 * 60 * 24 * 365));
+  if (diffYears > 2) {
+    code[0] = 1;
+    msgs.push({ stelle: 1, ok: false, text: `Buchungsdatum ${b.buchungsdatum} liegt außerhalb des erlaubten Buchungszeitraums (±2 Jahre).` });
+  } else {
+    msgs.push({ stelle: 1, ok: true, text: 'Buchungsdatum liegt im erlaubten Buchungszeitraum.' });
+  }
+
+  // ── Stelle 2: Periode nicht geschlossen (>12 Monate = geschlossen) ──────
+  const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+  if (diffMonths > 12) {
+    code[1] = 1;
+    msgs.push({ stelle: 2, ok: false, text: `Rechnungswesenperiode für ${b.buchungsdatum} ist geschlossen (Simulation: > 12 Monate in der Vergangenheit).` });
+  } else {
+    msgs.push({ stelle: 2, ok: true, text: 'Rechnungswesenperiode ist geöffnet.' });
+  }
+
+  // ── Stelle 3: Alle Sachkonten existieren im System ───────────────────────
+  // Belegkonto prüfen
+  const alleKontoTitel = [b.konto, ...b.positionen.map(p => p.kontotitel)];
+  const unbekannteKonten = alleKontoTitel.filter(k => !k || !ALLE_KONTEN.includes(k));
+  if (unbekannteKonten.length > 0) {
+    code[2] = 1;
+    msgs.push({ stelle: 3, ok: false, text: `Unbekannte/nicht im System eingerichtete Konten: ${[...new Set(unbekannteKonten)].join(', ')}. Gültige Konten: ${ALLE_KONTEN.join(', ')}.` });
+  } else {
+    msgs.push({ stelle: 3, ok: true, text: `Alle Sachkonten vorhanden und lesbar: ${[...new Set(alleKontoTitel)].join(', ')}.` });
+  }
+
+  // ── Stelle 4: Konten erlauben Bebuchung (keine Sperre) ──────────────────
+  // Stelle 3 muss OK sein, damit Stelle 4 sinnvoll prüfen kann
+  if (code[2] > 0) {
+    code[3] = 3; // Konto nicht gefunden → Bebuchbarkeit nicht prüfbar
+    msgs.push({ stelle: 4, ok: false, text: 'Bebuchbarkeit nicht prüfbar, da mindestens ein Konto nicht gefunden wurde (siehe Stelle 3).' });
+  } else {
+    msgs.push({ stelle: 4, ok: true, text: 'Alle Konten sind bebuchbar (keine Sperren aktiv).' });
+  }
+
+  // ── Stelle 5: Abrechnungsobjekte (Kostenstellen) ────────────────────────
+  if (code[2] > 0) {
+    // Konten unbekannt → AObj nicht prüfbar
+    code[4] = 3;
+    msgs.push({ stelle: 5, ok: false, text: 'Kostenstellen-Prüfung nicht möglich, da Konten unbekannt (siehe Stelle 3).' });
+  } else {
+    const fehler5 = [];
+
+    for (const p of b.positionen) {
+      const info = kontoInfo(p.kontotitel);
+      if (!info) continue; // bereits in Stelle 3 abgefangen
+
+      if (info.typ === 'bilanz' && p.kostenstelle) {
+        // Bilanzkonto mit Kostenstelle → verboten
+        fehler5.push(`"${p.kontotitel}" ist ein Bilanzkonto – Kostenstelle nicht erlaubt (eingetragen: ${p.kostenstelle}).`);
+      } else if (info.typ !== 'bilanz' && !p.kostenstelle) {
+        // Aufwandskonto ohne Kostenstelle → Pflicht
+        fehler5.push(`"${p.kontotitel}" ist ein Aufwandskonto – Kostenstelle ist Pflicht.`);
+      } else if (info.typ !== 'bilanz' && p.kostenstelle && !kstGueltig(p.kostenstelle)) {
+        // Kostenstelle nicht im System
+        fehler5.push(`Kostenstelle "${p.kostenstelle}" für "${p.kontotitel}" ist nicht im System eingerichtet. Gültig: ${Object.keys(KOSTENSTELLEN).join(', ')}.`);
+      }
+    }
+
+    if (fehler5.length > 0) {
+      code[4] = 1;
+      fehler5.forEach(t => msgs.push({ stelle: 5, ok: false, text: t }));
+    } else {
+      const kstListe = b.positionen
+        .filter(p => p.kostenstelle)
+        .map(p => `${p.kostenstelle} (${KOSTENSTELLEN[p.kostenstelle]})`);
+      msgs.push({ stelle: 5, ok: true, text: `Kostenstellen-Zuordnung korrekt.${kstListe.length ? ' Verwendete Kostenstellen: ' + [...new Set(kstListe)].join(', ') + '.' : ''}` });
+    }
+  }
+
+  // ── Stelle 6: Kostenstellen erlauben Bebuchung ──────────────────────────
+  if (code[4] > 0 && code[4] !== 1) {
+    code[5] = 3;
+    msgs.push({ stelle: 6, ok: false, text: 'Bebuchbarkeit der Kostenstellen nicht prüfbar (siehe Stelle 5).' });
+  } else {
+    const gesperrtePos = b.positionen.filter(p => p.kostenstelle === GESPERRTE_KST);
+    if (gesperrtePos.length > 0) {
+      code[5] = 2;
+      msgs.push({ stelle: 6, ok: false, text: `Kostenstelle ${GESPERRTE_KST} hat eine Bebuchungssperre. Diese Kostenstelle ist für Testzwecke gesperrt.` });
+    } else {
+      msgs.push({ stelle: 6, ok: true, text: 'Alle verwendeten Kostenstellen erlauben Bebuchung.' });
+    }
+  }
+
+  // ── Stelle 7: Sachkonten im Basis-BAB + USt-Konsistenz ──────────────────
+  const fehler7 = [];
+  for (const p of b.positionen) {
+    const info = kontoInfo(p.kontotitel);
+    if (!info) continue;
+    if (p.brutto && !p.ustSchluessel) {
+      fehler7.push(`"${p.kontotitel}": Brutto-Flag gesetzt, aber kein USt-Schlüssel angegeben.`);
+    }
+    if (p.ustSchluessel && info.typ === 'aufwand_ohneUSt') {
+      fehler7.push(`"${p.kontotitel}": Dieses Konto hat UStKontierung "keine Auswahl" – USt-Schlüssel nicht erlaubt.`);
+    }
+  }
+  if (fehler7.length > 0) {
+    code[6] = 1;
+    fehler7.forEach(t => msgs.push({ stelle: 7, ok: false, text: t }));
+  } else {
+    msgs.push({ stelle: 7, ok: true, text: 'Sachkonten korrekt dem Basis-BAB zugeordnet; USt-Konfiguration konsistent.' });
+  }
+
+  // ── Stelle 8: Hierarchieobjekte (nicht konfiguriert → immer OK) ─────────
+  msgs.push({ stelle: 8, ok: true, text: 'Sachkonten im BAB aller Hierarchieobjekte zugeordnet (keine Hierarchieobjekte konfiguriert).' });
+
+  // ── Stelle 9: Haushaltsstellen (nicht verwendet → immer OK) ─────────────
+  msgs.push({ stelle: 9, ok: true, text: 'Keine Haushaltsstellen verwendet (nicht relevant für diesen Mandanten).' });
+
+  return {
+    code: code.join(''),
+    messages: msgs,
+    ok: code.every(c => c === 0)
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  pruefeBelege – alle Belege prüfen
+// ══════════════════════════════════════════════════════════════════════════
+async function pruefeBelege() {
+  if (belege.length === 0) return;
+
+  const btn = document.getElementById('btnPruefen');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="icon">⟳</span> Prüfe…';
+
+  for (const b of belege) {
+    if (b.stapelStatus === 'success') continue; // bereits im Stapel
+    await delay(300 + Math.random() * 200);
+    const result = simulatePruefeBuchbarkeit(b);
+    b.pruefCode     = result.code;
+    b.pruefMessages = result.messages;
+    b.pruefStatus   = result.ok ? 'ok' : 'error';
+    // Expand the card to show result
+    b._expanded = true;
+    render(false);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span class="icon">⬡</span> Buchbarkeit prüfen';
+  updateStapelButton();
+  toast('Prüfung abgeschlossen.', belege.every(b => b.pruefStatus === 'ok' || b.stapelStatus === 'success') ? 'success' : 'error');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SIMULATION: insertBeleg / in Stapel schreiben
+// ══════════════════════════════════════════════════════════════════════════
+function simulateInsertBeleg(b) {
+  // Fachliche Validierungen (können pruefeBuchbarkeit entgehen)
+  const sumPos = b.positionen.reduce((s, p) => s + p.betrag, 0);
+  if (Math.abs(sumPos - Math.abs(b.belegbetrag)) > 0.005) {
+    return { success: false, msg: `Belegbetrag (${fmtNum(Math.abs(b.belegbetrag))}) stimmt nicht mit Summe der Positionen (${fmtNum(sumPos)}) überein. Differenz: ${fmtNum(Math.abs(b.belegbetrag) - sumPos)}` };
+  }
+  // Brutto ohne USt
+  for (const p of b.positionen) {
+    if (p.brutto && !p.ustSchluessel) {
+      return { success: false, msg: `Position "${p.kontotitel}": brutto=true ohne USt-Schlüssel. Umsatzsteuerschlüssel ist Pflicht bei Bruttobuchungen.` };
+    }
+    if (p.ustSchluessel && p.ustSchluessel.match(/VSt \d%$/)) {
+      return { success: false, msg: `Position "${p.kontotitel}": USt-Schlüssel "${p.ustSchluessel}" ungültig. Führende Null erforderlich, z.B. "VSt 07%".` };
+    }
+  }
+  // Kostenstellen-Betrag vs Nettobetrag
+  for (const p of b.positionen) {
+    if (p.kostenstelle && p.kstBetrag > 0 && p.brutto && p.ustSchluessel) {
+      // Prüfe ob Netto-Betrag korrekt ist
+      const pct = parseFloat(p.ustSchluessel.replace(/\D/g,''));
+      if (!isNaN(pct) && pct > 0) {
+        const expectedNet = Math.round(p.betrag / (1 + pct/100) * 100) / 100;
+        if (Math.abs(p.kstBetrag - expectedNet) > 0.02) {
+          return { success: false, msg: `Position "${p.kontotitel}": Kostenstellen-Betrag (${fmtNum(p.kstBetrag)}) entspricht nicht dem Nettobetrag (${fmtNum(expectedNet)} = ${fmtNum(p.betrag)} / ${1+pct/100}). Bei brutto=true muss der Nettobetrag zugeordnet werden.` };
+        }
+      }
+    }
+    // Bilanzkonto mit Kostenstelle
+    const istBilanzkonto = BILANZKONTEN.includes(p.kontotitel);
+    if (istBilanzkonto && p.kostenstelle) {
+      return { success: false, msg: `Position "${p.kontotitel}": Bilanzkonto mit Kostenstellen-Zuordnung. Bilanzkonten dürfen keine aobjKontierungen haben.` };
+    }
+  }
+  return { success: true, msg: `Beleg erfolgreich in Stapel geschrieben. Interne Belegnummer: ${1000 + Math.floor(Math.random()*9000)}` };
+}
+
+async function inStapelSchreiben() {
+  const btn = document.getElementById('btnStapel');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="icon">⟳</span> Schreibe…';
+
+  const zuSchreiben = belege.filter(b => b.pruefStatus === 'ok' && b.stapelStatus !== 'success');
+  let erfolge = 0, fehler = 0;
+
+  for (const b of zuSchreiben) {
+    await delay(400 + Math.random() * 300);
+    const result = simulateInsertBeleg(b);
+    if (result.success) {
+      b.stapelStatus = 'success';
+      b.stapelMsg    = result.msg;
+      erfolge++;
+    } else {
+      b.stapelStatus = 'fail';
+      b.stapelMsg    = result.msg;
+      b.pruefStatus  = 'error'; // zurücksetzen
+      fehler++;
+    }
+    b._expanded = true;
+    render(false);
+  }
+
+  btn.innerHTML = '<span class="icon">▶</span> In Stapel schreiben';
+  updateStapelButton();
+
+  if (fehler === 0) {
+    toast(`${erfolge} Beleg(e) erfolgreich in Stapel geschrieben.`, 'success');
+  } else {
+    toast(`${erfolge} Beleg(e) OK, ${fehler} Fehler. Fehlgeschlagene Belege prüfen.`, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════════════════════════
+function render(resetExpanded = true) {
+  const btn = document.getElementById('btnPruefen');
+  btn.disabled = belege.length === 0;
+
+  const list  = document.getElementById('belegeList');
+  const empty = document.getElementById('emptyState');
+
+  // emptyState lebt jetzt außerhalb von belegeList – niemals durch innerHTML='' gelöscht
+  empty.style.display = belege.length === 0 ? 'block' : 'none';
+
+  // Remember expanded state before wiping the list
+  const expanded = {};
+  if (!resetExpanded) {
+    document.querySelectorAll('.beleg-card').forEach(card => {
+      expanded[card.dataset.id] = card.querySelector('.beleg-detail').classList.contains('open');
+    });
+  }
+
+  list.innerHTML = '';
+  belege.forEach((b, i) => {
+    const isExpanded = resetExpanded ? false : (b._expanded || expanded[b.id] || false);
+    b._expanded = isExpanded;
+    list.appendChild(buildCard(b, i, isExpanded));
+  });
+  updateStapelButton();
+}
+
+function buildCard(b, i, expanded) {
+  const div = document.createElement('div');
+  div.className = `beleg-card${cardClass(b)}`;
+  div.dataset.id = b.id;
+
+  // Delete-Button: normaler Zustand vs. Bestätigung ausstehend
+  const isConfirm = deleteConfirmState.has(b.id);
+  const delBtn = isConfirm
+    ? `<button class="btn btn-danger btn-sm" style="min-width:100px" onclick="event.stopPropagation();deleteBeleg(${b.id})" title="Klick zum Bestätigen">✓ Löschen?</button>`
+    : `<button class="btn btn-danger btn-sm btn-icon" onclick="event.stopPropagation();deleteBeleg(${b.id})" title="Löschen (2× klicken)">🗑</button>`;
+
+  div.innerHTML = `
+    <div class="beleg-head" onclick="toggleCard(${b.id})">
+      <span class="beleg-num">#${String(i+1).padStart(2,'0')}</span>
+      <span class="beleg-art">${esc(b.belegart)}</span>
+      <span class="beleg-konto">${esc(b.konto)}</span>
+      <span class="beleg-datum">${b.buchungsdatum}</span>
+      <span class="beleg-betrag">${fmtNum(b.belegbetrag)} ${b.waehrung}</span>
+      <span class="beleg-text">${esc(b.text||'')}</span>
+      ${badgeHtml(b)}
+      <div class="beleg-head-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="event.stopPropagation();openModal(${b.id})" title="Bearbeiten">✏</button>
+        ${delBtn}
+      </div>
+      <span class="expand-icon ${expanded?'open':''}">▼</span>
+    </div>
+    <div class="beleg-detail ${expanded?'open':''}">
+      ${buildDetail(b)}
+    </div>
+  `;
+  return div;
+}
+
+function buildDetail(b) {
+  let html = '<div class="beleg-detail-inner">';
+
+  // Meta-Felder
+  html += `<div class="detail-grid">
+    <div class="detail-field"><label>Buchungsdatum</label><span>${b.buchungsdatum}</span></div>
+    <div class="detail-field"><label>Belegdatum</label><span>${b.belegdatum}</span></div>
+    <div class="detail-field"><label>Belegnummer</label><span>${b.beleg||'0 (auto)'}</span></div>
+    <div class="detail-field"><label>Status</label><span>${['','Speichern','Stapel','Buchen'][b.status]} (${b.status})</span></div>
+    <div class="detail-field"><label>Belegbetrag</label><span>${fmtNum(b.belegbetrag)} ${b.waehrung}</span></div>
+    <div class="detail-field"><label>Referenz</label><span>${esc(b.referenz||'–')}</span></div>
+    ${b.text?`<div class="detail-field"><label>Text</label><span>${esc(b.text)}</span></div>`:''}
+    ${b.quellsystem?`<div class="detail-field"><label>Quellsystem</label><span>${esc(b.quellsystem)}</span></div>`:''}
+  </div>`;
+
+  // Prüfergebnis
+  if (b.pruefCode !== null) {
+    const codeDigits = b.pruefCode.split('').map((c,i) =>
+      `<span class="code-digit ${c==='0'?'ok':'err'}" title="Stelle ${i+1}: ${STELLE_LABELS[i]}">${c}</span>`
+    ).join('');
+    html += `<div class="pruef-result">
+      <div class="pruef-code-row">
+        <span class="pruef-code-label">Prüfcode</span>
+        <div class="code-display">${codeDigits}</div>
+        <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${b.pruefCode}</span>
+      </div>
+      <div class="pruef-messages">
+        ${b.pruefMessages.map(m => `
+          <div class="pruef-msg ${m.ok?'ok':'err'}">
+            <div class="dot"></div>
+            <span>${m.ok?'':'[Stelle '+m.stelle+'] '}${esc(m.text)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Stapel-Ergebnis
+  if (b.stapelStatus) {
+    html += `<div class="stapel-result ${b.stapelStatus}">
+      <strong>${b.stapelStatus==='success'?'✓ Stapel OK':'✗ Stapel fehlgeschlagen'}:</strong>
+      ${esc(b.stapelMsg||'')}
+    </div>`;
+  }
+
+  // Positionen-Tabelle
+  html += `<table class="pos-detail-table">
+    <thead><tr>
+      <th>#</th><th>Positionsart</th><th>Kontotitel</th>
+      <th>Betrag</th><th>Soll/Haben</th><th>Brutto</th>
+      <th>USt-Schlüssel</th><th>Kostenstelle</th><th>KSt-Betrag</th><th>Text</th>
+    </tr></thead><tbody>`;
+  b.positionen.forEach((p, i) => {
+    html += `<tr>
+      <td style="color:var(--text3);font-family:var(--mono);font-size:11px">${i+1}</td>
+      <td>${esc(p.positionsart)}</td>
+      <td><strong>${esc(p.kontotitel)}</strong></td>
+      <td class="num">${fmtNum(p.betrag)}</td>
+      <td><span class="${p.soll?'soll-badge':'haben-badge'}">${p.soll?'SOLL':'HABEN'}</span></td>
+      <td>${p.brutto?'✓ Brutto':'Netto'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${esc(p.ustSchluessel)||'–'}</td>
+      <td style="font-family:var(--mono)">${esc(p.kostenstelle)||'–'}</td>
+      <td class="num">${p.kstBetrag?fmtNum(p.kstBetrag):'–'}</td>
+      <td style="color:var(--text2)">${esc(p.text)||'–'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function cardClass(b) {
+  if (b.stapelStatus === 'success') return ' status-stapel';
+  if (b.stapelStatus === 'fail')    return ' status-fail-stapel';
+  if (b.pruefStatus === 'ok')       return ' status-ok';
+  if (b.pruefStatus === 'error')    return ' status-error';
+  return '';
+}
+
+function badgeHtml(b) {
+  if (b.stapelStatus === 'success') return '<span class="beleg-status-badge badge-stapel">Im Stapel</span>';
+  if (b.stapelStatus === 'fail')    return '<span class="beleg-status-badge badge-fail-st">Stapel-Fehler</span>';
+  if (b.pruefStatus === 'ok')       return '<span class="beleg-status-badge badge-ok">Buchbar</span>';
+  if (b.pruefStatus === 'error')    return '<span class="beleg-status-badge badge-error">Prüffehler</span>';
+  return '<span class="beleg-status-badge badge-new">Neu</span>';
+}
+
+function toggleCard(id) {
+  const card = document.querySelector(`.beleg-card[data-id="${id}"]`);
+  const detail = card.querySelector('.beleg-detail');
+  const icon   = card.querySelector('.expand-icon');
+  const isOpen = detail.classList.toggle('open');
+  icon.classList.toggle('open', isOpen);
+  const b = belege.find(x => x.id === id);
+  if (b) b._expanded = isOpen;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  STAPEL-BUTTON STATE
+// ══════════════════════════════════════════════════════════════════════════
+function updateStapelButton() {
+  const btn   = document.getElementById('btnStapel');
+  const hint  = document.getElementById('stapelHint');
+  const total = belege.length;
+  if (total === 0) {
+    btn.disabled = true;
+    hint.textContent = 'Belege anlegen und prüfen, um fortzufahren.';
+    return;
+  }
+  const alleDone = belege.every(b => b.stapelStatus === 'success');
+  if (alleDone) {
+    btn.disabled = true;
+    hint.textContent = `Alle ${total} Beleg(e) erfolgreich in den Stapel geschrieben. ✓`;
+    hint.style.color = 'var(--green)';
+    return;
+  }
+  const alleOkOderIm = belege.every(b => b.pruefStatus === 'ok' || b.stapelStatus === 'success');
+  const offene = belege.filter(b => b.stapelStatus !== 'success');
+  const buchbare = offene.filter(b => b.pruefStatus === 'ok').length;
+  if (alleOkOderIm && buchbare > 0) {
+    btn.disabled = false;
+    hint.textContent = `${buchbare} Beleg(e) buchbar – bereit für Stapel.`;
+    hint.style.color = 'var(--green)';
+  } else {
+    btn.disabled = true;
+    const ungeprueft = belege.filter(b => b.pruefStatus === 'new' && b.stapelStatus !== 'success').length;
+    const fehlerhaft = belege.filter(b => b.pruefStatus === 'error').length;
+    if (ungeprueft > 0) {
+      hint.textContent = `${ungeprueft} Beleg(e) noch nicht geprüft.`;
+      hint.style.color = '';
+    } else if (fehlerhaft > 0) {
+      hint.textContent = `${fehlerhaft} Beleg(e) mit Prüffehlern – bitte korrigieren.`;
+      hint.style.color = 'var(--red)';
+    } else {
+      hint.textContent = '';
+      hint.style.color = '';
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  HILFSFUNKTIONEN
+// ══════════════════════════════════════════════════════════════════════════
+function fmtNum(n) {
+  return new Intl.NumberFormat('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(n||0);
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  DEMO-DATEN (vorausgefüllt damit man sofort loslegen kann)
+// ══════════════════════════════════════════════════════════════════════════
+function loadDemoData() {
+  const today = new Date().toISOString().slice(0,10);
+  belege = [
+    {
+      id: 1, belegart: 'Umbuchung', status: 1,
+      buchungsdatum: today, belegdatum: today,
+      konto: 'LOHN-UND GEHALTSVER', waehrung: 'EUR', beleg: 0,
+      belegbetrag: 6500.00,
+      text: 'Gehaltsbuchung März 2025', referenz: 'BU-2025-03-GEH', quellsystem: 'LOHN',
+      positionen: [
+        { positionsart:'Sachbuchung', kontotitel:'GEHÄLTER', betrag:5000, betragHW:5000, soll:true, brutto:false, ustSchluessel:'', kostenstelle:'1010', kstBetrag:5000, text:'Gehälter Entwicklung' },
+        { positionsart:'Sachbuchung', kontotitel:'AUSBILDUNGSVERGÜTUNG', betrag:1500, betragHW:1500, soll:true, brutto:false, ustSchluessel:'', kostenstelle:'1020', kstBetrag:1500, text:'Azubis März' },
+      ],
+      pruefStatus:'new', pruefCode:null, pruefMessages:[], stapelStatus:null, stapelMsg:null, _expanded:false
+    },
+    {
+      id: 2, belegart: 'Umbuchung', status: 1,
+      buchungsdatum: today, belegdatum: today,
+      konto: 'VERB. LOHN U. GEHALT', waehrung: 'EUR', beleg: 0,
+      belegbetrag: 112.54,
+      text: 'Reisekostenabrechnung Müller', referenz: 'BU-2025-03-REISE-042', quellsystem: 'REISE',
+      positionen: [
+        { positionsart:'Sachbuchung', kontotitel:'REISEKOSTEN', betrag:48.10, betragHW:48.10, soll:true, brutto:true, ustSchluessel:'VSt 07%', kostenstelle:'2010', kstBetrag:44.95, text:'Bahnticket Frankfurt-Berlin' },
+        { positionsart:'Sachbuchung', kontotitel:'REISEKOSTEN', betrag:64.44, betragHW:64.44, soll:true, brutto:true, ustSchluessel:'VSt 19%', kostenstelle:'2010', kstBetrag:54.15, text:'Hotel Berlin 2 Nächte' },
+      ],
+      pruefStatus:'new', pruefCode:null, pruefMessages:[], stapelStatus:null, stapelMsg:null, _expanded:false
+    }
+  ];
+  render();
+}
+
+// Init
+loadDemoData();
+</script>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+  MACH RechnungswesenService – VEREINFACHTES SCHEMA (Schulungsversion)
+  =============================================================================
+  Diese XSD enthält nur die Typen, die für die zwei Operationen
+    - pruefeBuchbarkeit
+    - insertBeleg
+  benötigt werden.
+
+  Gegenüber der Produktions-XSD wurden entfernt:
+    - alle Find*/Get*/Reverse*/Set*-Operationen
+    - Anlagen-, Darlehens- und Finanzanlagen-Felder
+    - KABU-Zusatzfelder (Kommunalbereich)
+    - Auslandszahlungsfelder (anweisungBanken, korrespondentEmpfaenger …)
+    - ZÜV-/Abgrenzungs-Typen
+    - Statistische Verwendungsfelder (verwendung12–23, statistik*)
+    - Postenpartner- und Verrechnungstypen
+    - HÜL-Referenz
+
+  Was übrig bleibt, deckt den normalen Buchungsalltag vollständig ab.
+  =============================================================================
+  Namespace: http://webservice.mach.de/rechnungswesen/v11/
+  =============================================================================
+-->
+<schema
+  xmlns:tns="http://webservice.mach.de/rechnungswesen/v11/"
+  attributeFormDefault="unqualified"
+  elementFormDefault="qualified"
+  targetNamespace="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns="http://www.w3.org/2001/XMLSchema">
+
+  <!-- =========================================================
+       EINFACHE TYPEN
+       ========================================================= -->
+
+  <simpleType name="belegInsertStatus">
+    <annotation>
+      <documentation>
+        Steuert, was nach dem Empfang mit dem Beleg passiert:
+          1 = Beleg wird nur gespeichert (kein Buchungseffekt)
+          2 = Beleg wird in den Buchungsstapel gestellt
+          3 = Beleg wird sofort gebucht
+        Für Tests empfiehlt sich zunächst Status 1.
+      </documentation>
+    </annotation>
+    <restriction base="integer">
+      <minInclusive value="1"/>
+      <maxInclusive value="3"/>
+    </restriction>
+  </simpleType>
+
+  <!-- =========================================================
+       KERNTYP: belegKey
+       Wird in der Response von insertBeleg zurückgegeben.
+       ========================================================= -->
+
+  <complexType name="belegKey">
+    <annotation>
+      <documentation>
+        Eindeutige Identifikation eines Belegs. Kann entweder über die
+        interne belegID oder über die Kombination mandant + belegNr +
+        buchungsdatum + belegart gebildet werden.
+        Bei belegID = 0 wird die Kombination der anderen Felder genutzt.
+      </documentation>
+    </annotation>
+    <sequence>
+      <element name="mandant" type="integer">
+        <annotation><documentation>Interne Mandantennummer, z.B. 1</documentation></annotation>
+      </element>
+      <element name="belegNr" type="integer">
+        <annotation><documentation>Belegnummer (externe Nummer)</documentation></annotation>
+      </element>
+      <element name="buchungsdatum" type="date" minOccurs="0">
+        <annotation><documentation>Format JJJJ-MM-TT</documentation></annotation>
+      </element>
+      <element name="belegart" type="string" minOccurs="0">
+        <annotation><documentation>Lookuptext der Gruppe "RWBelTyp", z.B. "Eingangsrechnung"</documentation></annotation>
+      </element>
+      <element name="belegID" type="integer">
+        <annotation><documentation>Interne Datenbank-ID des Belegs (Belege.RWBeleg)</documentation></annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <!-- =========================================================
+       KOSTENSTELLEN-KONTIERUNG einer Position
+       ========================================================= -->
+
+  <complexType name="belPosAObjKontierung">
+    <annotation>
+      <documentation>
+        Weist einen Teil des Positionsbetrags einem Abrechnungsobjekt
+        (Kostenstelle, Kostenträger …) zu.
+
+        Regeln:
+        - Nur für Aufwandskonten, die einem BAB zugeordnet sind.
+        - Für Bilanzkonten (Verbindlichkeiten, Forderungen) NICHT senden.
+        - Bei brutto=true in der Position: betrag muss der NETTO-Anteil sein
+          (Brutto / (1 + UStSatz)).
+        - soll erbt den Wert der übergeordneten belegposition.
+        - Die Summe aller aobjKontierungen einer Position muss dem
+          (Netto-)Betrag der Position entsprechen.
+      </documentation>
+    </annotation>
+    <sequence>
+      <element name="koReSicht" type="string" minOccurs="0">
+        <annotation>
+          <documentation>
+            Kostenrechnungssicht. Lookuptext der Gruppe "KoRe".
+            Typischer Wert: "Kostenstelle"
+          </documentation>
+        </annotation>
+      </element>
+      <element name="aobj" type="string" minOccurs="0">
+        <annotation>
+          <documentation>
+            Kennzeichen des Abrechnungsobjekts (Kostenstelle), z.B. "1010".
+            Muss in MACH als Basisobjekt eingerichtet sein.
+          </documentation>
+        </annotation>
+      </element>
+      <element name="betrag" type="decimal">
+        <annotation>
+          <documentation>
+            Zugeordneter Betrag in Buchungswährung.
+            Achtung: Bei Bruttobuchungen den NETTO-Betrag angeben!
+          </documentation>
+        </annotation>
+      </element>
+      <element name="betragHW" type="decimal">
+        <annotation>
+          <documentation>
+            Betrag in Hauswährung. Bei EUR-Buchungen identisch mit betrag.
+          </documentation>
+        </annotation>
+      </element>
+      <element name="soll" type="boolean">
+        <annotation>
+          <documentation>
+            true = Soll-Buchung, false = Haben-Buchung.
+            Muss denselben Wert wie soll der übergeordneten belegposition haben.
+          </documentation>
+        </annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <!-- =========================================================
+       BELEGPOSITION
+       ========================================================= -->
+
+  <complexType name="belegposition">
+    <annotation>
+      <documentation>
+        Eine Belegposition repräsentiert eine einzelne Buchungszeile
+        (Gegenkonto zum Belegkonto).
+
+        Mindestangaben: positionsart, kontotitel, betrag, betragHW, soll, brutto.
+        ustSchluessel nur angeben, wenn das Sachkonto UStKontierung
+        "Vorgangsabhängig" hat – sonst Fehler!
+      </documentation>
+    </annotation>
+    <sequence>
+      <element name="positionsart" type="string">
+        <annotation>
+          <documentation>
+            Lookuptext der Gruppe "RWPosTyp".
+            Typischer Wert für Sachbuchungen: "Sachbuchung"
+          </documentation>
+        </annotation>
+      </element>
+      <element name="kontotitel" type="string">
+        <annotation>
+          <documentation>
+            Kontotitel des Gegenkontos (Sachkonto in MACH), z.B. "GEHÄLTER".
+            Nicht die SAGE-Kontonummer, sondern den MACH-Kontotitel verwenden!
+          </documentation>
+        </annotation>
+      </element>
+      <element name="betrag" type="decimal">
+        <annotation>
+          <documentation>
+            Betrag der Position in Buchungswährung.
+            Immer positiv angeben – die Buchungsseite steuert das Feld "soll".
+            Bei brutto=true: Bruttobetrag inkl. USt angeben.
+          </documentation>
+        </annotation>
+      </element>
+      <element name="betragHW" type="decimal">
+        <annotation>
+          <documentation>
+            Betrag in Hauswährung (Heimwährung des Mandanten).
+            Bei reinen EUR-Buchungen identisch mit betrag.
+          </documentation>
+        </annotation>
+      </element>
+      <element name="soll" type="boolean">
+        <annotation>
+          <documentation>
+            true  = Position wird im SOLL  gebucht (Aufwand steigt)
+            false = Position wird im HABEN gebucht (Aufwand sinkt / Ertrag)
+          </documentation>
+        </annotation>
+      </element>
+      <element name="brutto" type="boolean">
+        <annotation>
+          <documentation>
+            true  = betrag enthält USt (Bruttobetrag)
+            false = betrag ist ohne USt  (Nettobetrag, Regelfall)
+            Bei brutto=true muss ustSchluessel angegeben werden.
+            Achtung: aobjKontierungen müssen dann den NETTO-Betrag enthalten!
+          </documentation>
+        </annotation>
+      </element>
+      <element name="ustSchluessel" type="string" minOccurs="0">
+        <annotation>
+          <documentation>
+            Umsatzsteuerschlüssel. Lookuptext der Gruppe "USt".
+            Nur senden, wenn das Sachkonto UStKontierung = "Vorgangsabhängig" hat.
+            Format mit führender Null: "VSt 07%", "VSt 19%", "VSt 0%"
+            FALSCH: "VSt 7%" (ohne führende Null → Fehler "Lookup nicht gefunden")
+          </documentation>
+        </annotation>
+      </element>
+      <element name="text" type="string" minOccurs="0">
+        <annotation>
+          <documentation>Freitext zur Position (Buchungstext / Verwendungszweck)</documentation>
+        </annotation>
+      </element>
+      <element name="aobjKontierungen" type="tns:belPosAObjKontierung"
+               minOccurs="0" maxOccurs="unbounded" nillable="true">
+        <annotation>
+          <documentation>
+            Kostenstellen-/Kostenträger-Zuordnung für diese Position.
+            Pflicht bei Aufwandskonten mit BAB-Zuordnung.
+            Verboten bei Bilanzkonten (Verbindlichkeiten, Forderungen).
+          </documentation>
+        </annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <!-- =========================================================
+       BELEGDATEN – Kern-Request für insertBeleg und pruefeBuchbarkeit
+       ========================================================= -->
+
+  <complexType name="belegdaten">
+    <annotation>
+      <documentation>
+        Vollständige Belegdaten. Wird sowohl von insertBeleg als auch von
+        pruefeBuchbarkeit verwendet – der Aufbau ist in beiden Fällen identisch.
+
+        Pflichtfelder:
+          status, belegart, buchungsdatum, belegdatum, konto,
+          waehrung, beleg, belegbetrag
+
+        Vorzeichen-Logik für belegbetrag:
+          negativ = Belegkonto wird im SOLL  belastet
+          positiv = Belegkonto wird im HABEN belastet
+          Beispiel Eingangsrechnung (Kreditor im Haben): belegbetrag positiv
+      </documentation>
+    </annotation>
+    <sequence>
+
+      <!-- ── Buchungssteuerung ── -->
+      <element name="status" type="tns:belegInsertStatus">
+        <annotation>
+          <documentation>1=speichern, 2=Stapel, 3=buchen. Für Tests zunächst 1 verwenden.</documentation>
+        </annotation>
+      </element>
+
+      <!-- ── Belegkopf ── -->
+      <element name="belegart" type="string">
+        <annotation>
+          <documentation>Lookuptext "RWBelTyp", z.B. "Eingangsrechnung", "Ausgangsrechnung", "Umbuchung"</documentation>
+        </annotation>
+      </element>
+      <element name="buchungsdatum" type="date">
+        <annotation><documentation>Format JJJJ-MM-TT. Muss im offenen Buchungszeitraum liegen.</documentation></annotation>
+      </element>
+      <element name="belegdatum" type="date">
+        <annotation><documentation>Format JJJJ-MM-TT. Datum des Originalbelegs (z.B. Rechnungsdatum).</documentation></annotation>
+      </element>
+      <element name="konto" type="string">
+        <annotation>
+          <documentation>
+            Kontotitel des BELEGKONTOS (Sammel-/Gegenkonto für alle Positionen).
+            Typisch: Verbindlichkeitskonto ("LOHN-UND GEHALTSVER"),
+                     Debitorenkonto oder Bankkonto.
+          </documentation>
+        </annotation>
+      </element>
+      <element name="waehrung" type="string">
+        <annotation><documentation>ISO-4217-Kürzel, z.B. "EUR"</documentation></annotation>
+      </element>
+      <element name="beleg" type="integer">
+        <annotation><documentation>Externe Belegnummer. 0 = automatische Vergabe aus Nummernkreis der Belegart.</documentation></annotation>
+      </element>
+      <element name="belegbetrag" type="decimal">
+        <annotation>
+          <documentation>
+            Gesamtbetrag des Belegs, bezogen auf das Belegkonto.
+            Vorzeichen: negativ = Belegkonto Soll / positiv = Belegkonto Haben.
+            Muss der Summe aller Positionsbeträge entsprechen.
+          </documentation>
+        </annotation>
+      </element>
+
+      <!-- ── Optionale Kopffelder ── -->
+      <element name="text" type="string" minOccurs="0">
+        <annotation><documentation>Freitext / Buchungstext auf Belegebene</documentation></annotation>
+      </element>
+      <element name="referenz" type="string" minOccurs="0">
+        <annotation><documentation>Externe Referenz (z.B. SAGE-Buchungsnummer, Auftragsnummer)</documentation></annotation>
+      </element>
+      <element name="schlagwort" type="string" minOccurs="0">
+        <annotation><documentation>Suchbegriff für späteres Auffinden des Belegs</documentation></annotation>
+      </element>
+      <element name="quellsystem" type="string" minOccurs="0">
+        <annotation>
+          <documentation>
+            Kennung des Quellsystems (max. 8 Zeichen, Prefix "WS" wird intern ergänzt).
+            Empfehlung: Kurzname des sendenden Systems, z.B. "SAGE"
+          </documentation>
+        </annotation>
+      </element>
+
+      <!-- ── Positionen ── -->
+      <element name="belPositionen" type="tns:belegposition"
+               minOccurs="0" maxOccurs="unbounded" nillable="true">
+        <annotation>
+          <documentation>
+            Liste der Buchungspositionen (Gegenkonten zum Belegkonto).
+            Die Summe aller Positionsbeträge muss dem Betrag des Belegkontos entsprechen.
+          </documentation>
+        </annotation>
+      </element>
+
+    </sequence>
+  </complexType>
+
+  <!-- =========================================================
+       REQUEST-/RESPONSE-WRAPPER
+       ========================================================= -->
+
+  <complexType name="insertBeleg">
+    <sequence>
+      <element name="belegdaten" type="tns:belegdaten"/>
+      <element name="benutzeAutoKontierung" type="boolean" minOccurs="0">
+        <annotation>
+          <documentation>
+            true = MACH übernimmt automatisch Kontierungszuordnungen,
+                   die bei den Abrechnungsobjekten hinterlegt sind.
+            Standardmäßig false.
+          </documentation>
+        </annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <complexType name="insertBelegResponse">
+    <sequence>
+      <element name="belegKey" type="tns:belegKey" minOccurs="0">
+        <annotation><documentation>Schlüssel des neu angelegten Belegs. Enthält u.a. die interne belegID.</documentation></annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <complexType name="pruefeBuchbarkeit">
+    <sequence>
+      <element name="belegdaten" type="tns:belegdaten">
+        <annotation>
+          <documentation>
+            Identischer Aufbau wie bei insertBeleg.
+            Der Beleg wird NICHT gespeichert – nur geprüft.
+          </documentation>
+        </annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <complexType name="pruefeBuchbarkeitResponse">
+    <sequence>
+      <element name="code" type="string">
+        <annotation>
+          <documentation>
+            9-stelliger Prüfcode. Jede Stelle: 0 = OK, &gt; 0 = Fehler.
+            Stelle 1: Buchungsdatum im Buchungszeitraum
+            Stelle 2: Periode nicht geschlossen
+            Stelle 3: Sachkonten existieren und sind lesbar
+            Stelle 4: Konten sind bebuchbar
+            Stelle 5: Abrechnungsobjekte existieren und sind Basisobjekte
+            Stelle 6: Abrechnungsobjekte erlauben Bebuchung
+            Stelle 7: Sachkonten im Basis-BAB der Abrechnungsobjekte
+            Stelle 8: Sachkonten im BAB der Hierarchieobjekte
+            Stelle 9: Haushaltsstellen vorhanden
+            Beispiel "000000000" = alle Prüfungen bestanden.
+            ACHTUNG: Positives Ergebnis garantiert keinen Erfolg bei insertBeleg!
+          </documentation>
+        </annotation>
+      </element>
+    </sequence>
+  </complexType>
+
+  <!-- =========================================================
+       ROOT ELEMENTS (werden in der WSDL referenziert)
+       ========================================================= -->
+
+  <element name="insertBeleg"              type="tns:insertBeleg"/>
+  <element name="insertBelegResponse"      type="tns:insertBelegResponse"/>
+  <element name="pruefeBuchbarkeit"        type="tns:pruefeBuchbarkeit"/>
+  <element name="pruefeBuchbarkeitResponse" type="tns:pruefeBuchbarkeitResponse"/>
+
+</schema>

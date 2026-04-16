@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+  MACH RechnungswesenService – VEREINFACHTE WSDL (Schulungsversion)
+  =============================================================================
+  Enthält nur die zwei Operationen, die in der Schulungsübung verwendet werden:
+
+    1. pruefeBuchbarkeit  – Vorprüfung ohne Buchungseffekt
+    2. insertBeleg        – Beleg anlegen
+
+  Authentifizierung: WS-Security UsernameToken (Klartext-Passwort)
+  Format des UsernameToken-Felds "Username":
+    name=<benutzername>,database=<datenbankname>,mandant=100,niederlassung=1
+
+  Endpoint (Beispiel, ggf. anpassen):
+    http://<server>:8080/MACHWeb/services/rechnungswesen-v11/
+  =============================================================================
+-->
+<wsdl:definitions
+  name="RechnungswesenServiceTraining"
+  targetNamespace="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+
+  <!-- ── Datentypen aus der vereinfachten XSD ── -->
+  <wsdl:types>
+    <xsd:schema>
+      <xsd:import
+        namespace="http://webservice.mach.de/rechnungswesen/v11/"
+        schemaLocation="rechnungswesen-training.xsd"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <!-- =========================================================
+       MESSAGES
+       ========================================================= -->
+
+  <wsdl:message name="pruefeBuchbarkeitRequest">
+    <wsdl:part name="parameters" element="tns:pruefeBuchbarkeit"/>
+  </wsdl:message>
+  <wsdl:message name="pruefeBuchbarkeitResponse">
+    <wsdl:part name="parameters" element="tns:pruefeBuchbarkeitResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="insertBelegRequest">
+    <wsdl:part name="parameters" element="tns:insertBeleg"/>
+  </wsdl:message>
+  <wsdl:message name="insertBelegResponse">
+    <wsdl:part name="parameters" element="tns:insertBelegResponse"/>
+  </wsdl:message>
+
+  <!-- =========================================================
+       PORT TYPE (abstrakte Operationsdefinition)
+       ========================================================= -->
+
+  <wsdl:portType name="RechnungswesenService">
+
+    <wsdl:operation name="pruefeBuchbarkeit">
+      <wsdl:documentation>
+        Prüft einen Beleg auf Buchbarkeit, OHNE ihn zu speichern.
+        Gibt einen 9-stelligen Code zurück (0 = OK je Stelle).
+        Nützlich als erster Schritt vor insertBeleg, um
+        Konfigurationsfehler frühzeitig zu erkennen.
+        Eine bestandene Prüfung garantiert keinen erfolgreichen insertBeleg.
+      </wsdl:documentation>
+      <wsdl:input  message="tns:pruefeBuchbarkeitRequest"/>
+      <wsdl:output message="tns:pruefeBuchbarkeitResponse"/>
+    </wsdl:operation>
+
+    <wsdl:operation name="insertBeleg">
+      <wsdl:documentation>
+        Legt einen neuen Rechnungswesenbeleg in MACH an.
+        Der Parameter "status" steuert, ob der Beleg nur gespeichert (1),
+        in den Stapel gestellt (2) oder sofort gebucht (3) wird.
+        Bei Erfolg wird ein belegKey mit der internen belegID zurückgegeben.
+      </wsdl:documentation>
+      <wsdl:input  message="tns:insertBelegRequest"/>
+      <wsdl:output message="tns:insertBelegResponse"/>
+    </wsdl:operation>
+
+  </wsdl:portType>
+
+  <!-- =========================================================
+       BINDING (konkretes SOAP-Protokoll)
+       ========================================================= -->
+
+  <wsdl:binding name="RechnungswesenServiceSoapBinding"
+                type="tns:RechnungswesenService">
+
+    <soap:binding style="document"
+                  transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <wsdl:operation name="pruefeBuchbarkeit">
+      <soap:operation
+        soapAction="http://webservice.mach.de/rechnungswesen/v11/pruefeBuchbarkeit"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="insertBeleg">
+      <soap:operation
+        soapAction="http://webservice.mach.de/rechnungswesen/v11/insertBeleg"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+
+  </wsdl:binding>
+
+  <!-- =========================================================
+       SERVICE (Endpoint-Adresse)
+       ========================================================= -->
+
+  <wsdl:service name="RechnungswesenServiceV11">
+    <wsdl:port name="RechnungswesenServicePort"
+               binding="tns:RechnungswesenServiceSoapBinding">
+      <!--
+        Adresse bitte an die tatsächliche Serveradresse anpassen.
+        In SoapUI: Rechtsklick auf den Request → "Edit Endpoint"
+      -->
+      <soap:address location="http://localhost:8080/MACHWeb/services/rechnungswesen-v11/"/>
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>

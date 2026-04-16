@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  BEISPIEL 2 – insertBeleg (Gehaltsbuchung mit zwei Positionen, ohne USt)
+  ═══════════════════════════════════════════════════════════════════════════════
+  Szenario:
+    Monatliche Gehaltsbuchung mit zwei Personalkostenarten, zwei Kostenstellen.
+    Kein Umsatzsteuer-Handling (Personalkosten sind USt-frei).
+
+  Buchungslogik:
+    Belegkonto  LOHN-UND GEHALTSVER   Haben  6.500,00 € (belegbetrag positiv)
+    Position 1: GEHÄLTER              Soll   5.000,00 € (Kostenstelle 1010)
+    Position 2: AUSBILDUNGSVERGÜTUNG  Soll   1.500,00 € (Kostenstelle 1020)
+    ──────────────────────────────────────────────────────
+    Summe Positionen = 6.500,00 € = belegbetrag ✓
+
+  Was erwartest du als Ergebnis?
+    ● Erfolg: Response enthält <belegKey> mit belegID > 0
+    ● Fehler "Der Belegbetrag ist unvollständig auf Positionen kontiert":
+      Tritt auf wenn Summe der Positionen ≠ belegbetrag
+    ● Fehler "Das Sachkonto ist nicht dem Basis-BAB zugeordnet":
+      Tritt auf wenn aobjKontierung für ein Bilanzkonto gesendet wird
+
+  Übungsaufgabe für Teilnehmer:
+    Verändere den belegbetrag auf 6.000,00 (Absicht: Fehler provozieren).
+    Welcher Fehler kommt? Ändere dann eine Position um den Fehler zu beheben.
+  ═══════════════════════════════════════════════════════════════════════════════
+-->
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+
+  <soapenv:Header>
+    <wsse:Security>
+      <wsse:UsernameToken>
+        <wsse:Username>name=schulung_user,database=schulung_db,mandant=100,niederlassung=1</wsse:Username>
+        <wsse:Password
+          Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">
+          schulung_passwort
+        </wsse:Password>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </soapenv:Header>
+
+  <soapenv:Body>
+    <rw:insertBeleg>
+      <belegdaten>
+
+        <!-- ── Buchungssteuerung ────────────────────────────────────── -->
+        <!-- Status 1 = nur speichern (kein Buchungseffekt, sicher für Tests) -->
+        <status>1</status>
+
+        <!-- ── Belegkopf ────────────────────────────────────────────── -->
+        <belegart>Umbuchung</belegart>
+        <buchungsdatum>2025-03-31</buchungsdatum>
+        <belegdatum>2025-03-31</belegdatum>
+
+        <!-- Belegkonto: Verbindlichkeit Löhne & Gehälter (Haben-Seite) -->
+        <konto>LOHN-UND GEHALTSVER</konto>
+        <waehrung>EUR</waehrung>
+        <beleg>0</beleg>
+
+        <!--
+          belegbetrag POSITIV = Belegkonto wird im Haben belastet.
+          Muss exakt gleich der Summe aller Positionsbeträge sein: 5000 + 1500 = 6500
+        -->
+        <belegbetrag>6500.00</belegbetrag>
+
+        <text>Gehaltsbuchung März 2025</text>
+        <referenz>SAGE-2025-03-GEH</referenz>
+        <quellsystem>SAGE</quellsystem>
+
+        <!-- ── Position 1: Gehälter Abteilung Entwicklung ────────────── -->
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>GEHÄLTER</kontotitel>
+          <betrag>5000.00</betrag>
+          <betragHW>5000.00</betragHW>
+          <soll>true</soll>
+          <brutto>false</brutto>
+          <!-- kein ustSchluessel: GEHÄLTER hat UStKontierung "keine Auswahl" -->
+          <text>Gehälter Entwicklung März</text>
+
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>1010</aobj>
+            <betrag>5000.00</betrag>
+            <betragHW>5000.00</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+
+        <!-- ── Position 2: Ausbildungsvergütung Kostenstelle Ausbildung ── -->
+        <belPositionen>
+          <positionsart>Sachbuchung</positionsart>
+          <kontotitel>AUSBILDUNGSVERGÜTUNG</kontotitel>
+          <betrag>1500.00</betrag>
+          <betragHW>1500.00</betragHW>
+          <soll>true</soll>
+          <brutto>false</brutto>
+          <text>Azubis März</text>
+
+          <aobjKontierungen>
+            <koReSicht>Kostenstelle</koReSicht>
+            <aobj>1020</aobj>
+            <betrag>1500.00</betrag>
+            <betragHW>1500.00</betragHW>
+            <soll>true</soll>
+          </aobjKontierungen>
+        </belPositionen>
+
+      </belegdaten>
+
+      <!-- AutoKontierung aus MACH-Stammdaten nicht verwenden -->
+      <benutzeAutoKontierung>false</benutzeAutoKontierung>
+
+    </rw:insertBeleg>
+  </soapenv:Body>
+
+</soapenv:Envelope>
