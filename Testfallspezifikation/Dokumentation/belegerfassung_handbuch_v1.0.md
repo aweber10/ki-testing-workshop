@@ -41,23 +41,9 @@ Beim Öffnen werden zwei Beispielbelege angezeigt, an denen Sie sich orientieren
 
 ## 2. Bildschirmaufbau
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  FIBU   Rechnungswesen – Belegerfassung          SCHULUNG v1.0  │
-├─────────────────────────────────────────────────────────────────┤
-│  [+ Neuer Beleg]          [⬡ Buchbarkeit prüfen] [▶ In Stapel] │
-│                                          Statushinweis          │
-├─────────────────────────────────────────────────────────────────┤
-│  ERFASSTE BELEGE                                                │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │ #01  UMBUCHUNG  LOHN-UND GEHALTSVER  2025-03-31  6.500,00│  │
-│  │      [✏ Bearbeiten] [🗑 Löschen]              [▼]        │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │ #02  UMBUCHUNG  VERB. LOHN U. GEHALT  2025-03-31  112,54 │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+![Bildschirmaufbau](images/image1.png)
+
 
 **Aktionsleiste (oben):**
 - **+ Neuer Beleg** – öffnet das Erfassungsformular
@@ -270,6 +256,8 @@ Klicken Sie **zweimal** auf das **🗑-Symbol**:
 ### Funktion
 
 Der Button **⬡ Buchbarkeit prüfen** führt für alle Belege in der Liste eine Vorprüfung durch, **ohne etwas zu buchen oder zu speichern**. Die Prüfung läuft automatisch für alle Belege nacheinander durch und zeigt das Ergebnis in der aufgeklappten Detailansicht jedes Belegs.
+
+![Bucbarkeit prüfen](images/image2.png)
 
 ### Prüfcode
 

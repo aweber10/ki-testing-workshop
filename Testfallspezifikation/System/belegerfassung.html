@@ -287,6 +287,53 @@
   .sum-match { color: var(--green); font-size: 11px; }
   .sum-mismatch { color: var(--red); font-size: 11px; }
 
+  /* ── Positionen-Cards im Formular ── */
+  .pos-cards-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .pos-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px 14px;
+  }
+  .pos-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .pos-card-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 7px;
+    min-width: 28px;
+    text-align: center;
+  }
+  .pos-card-header-spacer { flex: 1; }
+  .pos-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 10px 14px;
+  }
+  .pos-card-grid .span3 { grid-column: span 3; }
+  /* Checkboxes in card – override the 100% width from .form-group input */
+  .pos-card-grid input[type="checkbox"] {
+    width: auto !important;
+    min-width: unset !important;
+    height: 18px;
+    margin-top: 4px;
+    cursor: pointer;
+  }
+  /* Align checkbox cells to bottom so they line up with adjacent field bottoms */
+  .pos-card-grid .pos-chk {
+    justify-content: flex-end;
+    padding-bottom: 6px;
+  }
+
   /* ── Belege-Liste ── */
   .belege-list { display: flex; flex-direction: column; gap: 10px; }
   .empty-state {
@@ -616,27 +663,7 @@
       Belegpositionen
       <button class="btn btn-secondary btn-sm" onclick="addPosition()">＋ Position hinzufügen</button>
     </div>
-    <div class="pos-table-wrap">
-      <table class="pos-table" id="posTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th style="min-width:110px">Positionsart *</th>
-            <th style="min-width:130px">Kontotitel *</th>
-            <th style="min-width:90px">Betrag *</th>
-            <th style="min-width:80px">BetragHW *</th>
-            <th>Soll</th>
-            <th>Brutto</th>
-            <th style="min-width:90px">USt-Schlüssel</th>
-            <th style="min-width:100px">Kostenstelle</th>
-            <th style="min-width:80px">KSt-Betrag</th>
-            <th style="min-width:130px">Positionstext</th>
-            <th class="col-del"></th>
-          </tr>
-        </thead>
-        <tbody id="posBody"></tbody>
-      </table>
-    </div>
+    <div id="posBody" class="pos-cards-wrap"></div>
     <div class="sum-row" id="sumRow">
       <span>Summe Positionen:</span>
       <span class="sum-val" id="sumDisplay">0,00</span>
@@ -718,57 +745,93 @@ function overlayClick(e) {
 // ══════════════════════════════════════════════════════════════════════════
 function addPosition(data = null) {
   const idx = posCounter++;
-  const tbody = document.getElementById('posBody');
-  const tr = document.createElement('tr');
-  tr.dataset.idx = idx;
+  const container = document.getElementById('posBody');
+  const div = document.createElement('div');
+  div.className = 'pos-card';
+  div.dataset.idx = idx;
 
   const d = data || {
     positionsart: 'Sachbuchung', kontotitel: '', betrag: '', betragHW: '',
     soll: true, brutto: false, ustSchluessel: '', kostenstelle: '', kstBetrag: '', text: ''
   };
 
-  tr.innerHTML = `
-    <td style="color:var(--text3);font-size:11px;padding:4px 6px;font-family:var(--mono)">${idx+1}</td>
-    <td><select onchange="updateSum()" data-field="positionsart">
-      <option ${d.positionsart==='Sachbuchung'?'selected':''}>Sachbuchung</option>
-      <option ${d.positionsart==='Debitorenposten'?'selected':''}>Debitorenposten</option>
-      <option ${d.positionsart==='Kreditorenposten'?'selected':''}>Kreditorenposten</option>
-    </select></td>
-    <td><input type="text"   data-field="kontotitel"   value="${d.kontotitel}"   placeholder="z.B. GEHÄLTER" onchange="updateSum()"></td>
-    <td><input type="number" data-field="betrag"       value="${d.betrag}"       step="0.01" placeholder="0.00" oninput="syncHW(this);updateSum()" class="num"></td>
-    <td><input type="number" data-field="betragHW"     value="${d.betragHW}"     step="0.01" placeholder="0.00" oninput="updateSum()" class="num"></td>
-    <td style="text-align:center"><input type="checkbox" data-field="soll"   ${d.soll?'checked':''}></td>
-    <td style="text-align:center"><input type="checkbox" data-field="brutto" ${d.brutto?'checked':''}></td>
-    <td><input type="text" data-field="ustSchluessel" value="${d.ustSchluessel}" placeholder="VSt 19%"></td>
-    <td><input type="text" data-field="kostenstelle"  value="${d.kostenstelle}"  placeholder="z.B. 1010"></td>
-    <td><input type="number" data-field="kstBetrag"   value="${d.kstBetrag}"    step="0.01" placeholder="0.00" class="num"></td>
-    <td><input type="text"   data-field="text"        value="${d.text||''}"      placeholder="Freitext"></td>
-    <td class="col-del"><button class="btn btn-danger btn-icon btn-sm" onclick="removePosition(this)" title="Position entfernen">✕</button></td>
+  div.innerHTML = `
+    <div class="pos-card-header">
+      <span class="pos-card-num">${idx+1}</span>
+      <span class="pos-card-header-spacer"></span>
+      <button class="btn btn-danger btn-icon btn-sm" onclick="removePosition(this)" title="Position entfernen">✕</button>
+    </div>
+    <div class="pos-card-grid">
+      <div class="form-group">
+        <label>Positionsart <span class="req">*</span></label>
+        <select onchange="updateSum()" data-field="positionsart">
+          <option ${d.positionsart==='Sachbuchung'?'selected':''}>Sachbuchung</option>
+          <option ${d.positionsart==='Debitorenposten'?'selected':''}>Debitorenposten</option>
+          <option ${d.positionsart==='Kreditorenposten'?'selected':''}>Kreditorenposten</option>
+        </select>
+      </div>
+      <div class="form-group span3">
+        <label>Kontotitel <span class="req">*</span></label>
+        <input type="text" data-field="kontotitel" value="${d.kontotitel}" placeholder="z.B. GEHÄLTER" onchange="updateSum()">
+      </div>
+      <div class="form-group">
+        <label>Betrag <span class="req">*</span></label>
+        <input type="number" data-field="betrag" value="${d.betrag}" step="0.01" placeholder="0.00" oninput="syncHW(this);updateSum()">
+      </div>
+      <div class="form-group">
+        <label>Betrag HW <span class="req">*</span></label>
+        <input type="number" data-field="betragHW" value="${d.betragHW}" step="0.01" placeholder="0.00" oninput="updateSum()">
+      </div>
+      <div class="form-group pos-chk">
+        <label>Soll <span class="req">*</span></label>
+        <input type="checkbox" data-field="soll" ${d.soll?'checked':''}>
+      </div>
+      <div class="form-group pos-chk">
+        <label>Brutto</label>
+        <input type="checkbox" data-field="brutto" ${d.brutto?'checked':''}>
+      </div>
+      <div class="form-group">
+        <label>USt-Schlüssel</label>
+        <input type="text" data-field="ustSchluessel" value="${d.ustSchluessel}" placeholder="z.B. VSt 07%">
+      </div>
+      <div class="form-group">
+        <label>Kostenstelle</label>
+        <input type="text" data-field="kostenstelle" value="${d.kostenstelle}" placeholder="z.B. 1010">
+      </div>
+      <div class="form-group">
+        <label>KSt-Betrag</label>
+        <input type="number" data-field="kstBetrag" value="${d.kstBetrag}" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Positionstext</label>
+        <input type="text" data-field="text" value="${d.text||''}" placeholder="Freitext">
+      </div>
+    </div>
   `;
-  tbody.appendChild(tr);
+  container.appendChild(div);
   updateSum();
 }
 
 function removePosition(btn) {
-  const tr = btn.closest('tr');
-  tr.remove();
+  const card = btn.closest('.pos-card');
+  card.remove();
   // renumber
-  document.querySelectorAll('#posBody tr').forEach((r, i) => {
-    r.cells[0].textContent = i + 1;
+  document.querySelectorAll('#posBody .pos-card').forEach((c, i) => {
+    c.querySelector('.pos-card-num').textContent = i + 1;
   });
   updateSum();
 }
 
 function syncHW(input) {
-  const tr = input.closest('tr');
-  const hw = tr.querySelector('[data-field="betragHW"]');
+  const card = input.closest('.pos-card');
+  const hw = card.querySelector('[data-field="betragHW"]');
   hw.value = input.value;
 }
 
 function updateSum() {
   let sum = 0;
-  document.querySelectorAll('#posBody tr').forEach(tr => {
-    const v = parseFloat(tr.querySelector('[data-field="betrag"]').value) || 0;
+  document.querySelectorAll('#posBody .pos-card').forEach(card => {
+    const v = parseFloat(card.querySelector('[data-field="betrag"]').value) || 0;
     sum += v;
   });
   document.getElementById('sumDisplay').textContent = fmtNum(sum);
@@ -789,22 +852,22 @@ function updateSum() {
 
 function readPositionen() {
   const rows = [];
-  document.querySelectorAll('#posBody tr').forEach(tr => {
-    const kontotitel = tr.querySelector('[data-field="kontotitel"]').value.trim();
-    const betrag     = parseFloat(tr.querySelector('[data-field="betrag"]').value) || 0;
+  document.querySelectorAll('#posBody .pos-card').forEach(card => {
+    const kontotitel = card.querySelector('[data-field="kontotitel"]').value.trim();
+    const betrag     = parseFloat(card.querySelector('[data-field="betrag"]').value) || 0;
     // Leere Zeilen (kein Kontotitel UND kein Betrag) werden stillschweigend übersprungen
     if (!kontotitel && betrag === 0) return;
     rows.push({
-      positionsart:  tr.querySelector('[data-field="positionsart"]').value,
+      positionsart:  card.querySelector('[data-field="positionsart"]').value,
       kontotitel:    kontotitel,
       betrag:        betrag,
-      betragHW:      parseFloat(tr.querySelector('[data-field="betragHW"]').value) || 0,
-      soll:          tr.querySelector('[data-field="soll"]').checked,
-      brutto:        tr.querySelector('[data-field="brutto"]').checked,
-      ustSchluessel: tr.querySelector('[data-field="ustSchluessel"]').value.trim(),
-      kostenstelle:  tr.querySelector('[data-field="kostenstelle"]').value.trim(),
-      kstBetrag:     parseFloat(tr.querySelector('[data-field="kstBetrag"]').value) || 0,
-      text:          tr.querySelector('[data-field="text"]').value.trim(),
+      betragHW:      parseFloat(card.querySelector('[data-field="betragHW"]').value) || 0,
+      soll:          card.querySelector('[data-field="soll"]').checked,
+      brutto:        card.querySelector('[data-field="brutto"]').checked,
+      ustSchluessel: card.querySelector('[data-field="ustSchluessel"]').value.trim(),
+      kostenstelle:  card.querySelector('[data-field="kostenstelle"]').value.trim(),
+      kstBetrag:     parseFloat(card.querySelector('[data-field="kstBetrag"]').value) || 0,
+      text:          card.querySelector('[data-field="text"]').value.trim(),
     });
   });
   return rows;
