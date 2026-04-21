@@ -1,24 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   =============================================================================
-  MACH RechnungswesenService – VEREINFACHTES SCHEMA (Schulungsversion)
+  RechnungswesenService – VEREINFACHTES SCHEMA (Schulungsversion)
   =============================================================================
   Diese XSD enthält nur die Typen, die für die zwei Operationen
     - pruefeBuchbarkeit
     - insertBeleg
   benötigt werden.
 
-  Gegenüber der Produktions-XSD wurden entfernt:
-    - alle Find*/Get*/Reverse*/Set*-Operationen
-    - Anlagen-, Darlehens- und Finanzanlagen-Felder
-    - KABU-Zusatzfelder (Kommunalbereich)
-    - Auslandszahlungsfelder (anweisungBanken, korrespondentEmpfaenger …)
-    - ZÜV-/Abgrenzungs-Typen
-    - Statistische Verwendungsfelder (verwendung12–23, statistik*)
-    - Postenpartner- und Verrechnungstypen
-    - HÜL-Referenz
-
-  Was übrig bleibt, deckt den normalen Buchungsalltag vollständig ab.
   =============================================================================
   Namespace: http://webservice.mach.de/rechnungswesen/v11/
   =============================================================================

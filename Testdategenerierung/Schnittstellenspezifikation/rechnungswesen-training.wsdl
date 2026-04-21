@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   =============================================================================
-  MACH RechnungswesenService – VEREINFACHTE WSDL (Schulungsversion)
+  RechnungswesenService – VEREINFACHTE WSDL (Schulungsversion)
   =============================================================================
   Enthält nur die zwei Operationen, die in der Schulungsübung verwendet werden:
 
@@ -12,8 +12,6 @@
   Format des UsernameToken-Felds "Username":
     name=<benutzername>,database=<datenbankname>,mandant=100,niederlassung=1
 
-  Endpoint (Beispiel, ggf. anpassen):
-    http://<server>:8080/MACHWeb/services/rechnungswesen-v11/
   =============================================================================
 -->
 <wsdl:definitions
