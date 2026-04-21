@@ -541,6 +541,18 @@ function getChildVal(el, localName) {
   return '';
 }
 
+// Namespace-flexible version - accepts both qualified (tns:element) and unqualified (element)
+function getChildValFlexible(el, localName) {
+  if (!el) return '';
+  for (const child of el.children) {
+    if (child.localName === localName && 
+        (child.namespaceURI === RW_NS || child.namespaceURI === null || child.namespaceURI === '')) {
+      return child.textContent.trim();
+    }
+  }
+  return '';
+}
+
 function rnd(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -558,6 +570,208 @@ function kontoTyp(titel) {
   if (AUFWANDSKONTEN_OHNE_UST.includes(titel)) return 'aufwand_ohneUSt';
   if (AUFWANDSKONTEN_MIT_UST.includes(titel))  return 'aufwand_mitUSt';
   return null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SCHEMA VALIDATION (XSD Conformance)
+// ══════════════════════════════════════════════════════════════════════════
+
+function validateRequiredElements(belegdatenEl) {
+  const errors = [];
+  const required = ['status', 'belegart', 'buchungsdatum', 'belegdatum', 'konto', 'belegbetrag'];
+  
+  required.forEach(field => {
+    const val = getChildValFlexible(belegdatenEl, field);
+    if (!val || val.trim() === '') {
+      errors.push(`Element '${field}': Required element is missing or empty`);
+    }
+  });
+  
+  return errors;
+}
+
+function validateSchemaTypes(belegdatenEl) {
+  const errors = [];
+  
+  // status: belegInsertStatus (1-3)
+  const status = getChildValFlexible(belegdatenEl, 'status');
+  if (status && !['1', '2', '3'].includes(status)) {
+    errors.push(`Element 'status': Expected integer (1-3), got '${status}'`);
+  }
+  
+  // buchungsdatum/belegdatum: date (YYYY-MM-DD)
+  const dates = ['buchungsdatum', 'belegdatum'];
+  dates.forEach(dateField => {
+    const dateVal = getChildValFlexible(belegdatenEl, dateField);
+    if (dateVal && !/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+      errors.push(`Element '${dateField}': Expected date (YYYY-MM-DD), got '${dateVal}'`);
+    }
+  });
+  
+  // belegbetrag: decimal
+  const betrag = getChildValFlexible(belegdatenEl, 'belegbetrag');
+  if (betrag && isNaN(parseFloat(betrag))) {
+    errors.push(`Element 'belegbetrag': Expected decimal, got '${betrag}'`);
+  }
+  
+  // waehrung: if present, should be valid currency code
+  const waehrung = getChildValFlexible(belegdatenEl, 'waehrung');
+  if (waehrung && waehrung.length !== 3) {
+    errors.push(`Element 'waehrung': Expected 3-letter currency code, got '${waehrung}'`);
+  }
+  
+  // beleg: integer
+  const beleg = getChildValFlexible(belegdatenEl, 'beleg');
+  if (beleg && (isNaN(parseInt(beleg)) || parseInt(beleg) < 0)) {
+    errors.push(`Element 'beleg': Expected non-negative integer, got '${beleg}'`);
+  }
+  
+  return errors;
+}
+
+function validatePositionsSchema(belegdatenEl) {
+  const errors = [];
+  const posEls = [];
+  
+  // Get all belPositionen elements (namespace flexible)
+  for (const child of belegdatenEl.children) {
+    if (child.localName === 'belPositionen' && 
+        (child.namespaceURI === RW_NS || child.namespaceURI === null || child.namespaceURI === '')) {
+      posEls.push(child);
+    }
+  }
+  
+  posEls.forEach((pos, idx) => {
+    // Required in Position
+    const required = ['positionsart', 'kontotitel', 'betrag', 'betragHW', 'soll', 'brutto'];
+    required.forEach(field => {
+      const val = getChildValFlexible(pos, field);
+      if (!val || val.trim() === '') {
+        errors.push(`Position ${idx + 1}, Element '${field}': Required element is missing or empty`);
+      }
+    });
+    
+    // Boolean validation
+    const booleans = ['soll', 'brutto'];
+    booleans.forEach(field => {
+      const val = getChildValFlexible(pos, field);
+      if (val && !['true', 'false'].includes(val)) {
+        errors.push(`Position ${idx + 1}, Element '${field}': Expected boolean (true/false), got '${val}'`);
+      }
+    });
+    
+    // Decimal validation
+    const decimals = ['betrag', 'betragHW'];
+    decimals.forEach(field => {
+      const val = getChildValFlexible(pos, field);
+      if (val && isNaN(parseFloat(val))) {
+        errors.push(`Position ${idx + 1}, Element '${field}': Expected decimal, got '${val}'`);
+      }
+    });
+    
+    // aobjKontierungen validation
+    for (const child of pos.children) {
+      if (child.localName === 'aobjKontierungen') {
+        const aobjRequired = ['betrag', 'betragHW', 'soll'];
+        aobjRequired.forEach(field => {
+          const val = getChildValFlexible(child, field);
+          if (!val || val.trim() === '') {
+            errors.push(`Position ${idx + 1}, aobjKontierungen, Element '${field}': Required element is missing or empty`);
+          }
+        });
+        
+        // aobj should be numeric kostenstelle
+        const aobj = getChildValFlexible(child, 'aobj');
+        if (aobj && !/^\d+$/.test(aobj)) {
+          errors.push(`Position ${idx + 1}, aobjKontierungen, Element 'aobj': Expected numeric kostenstelle, got '${aobj}'`);
+        }
+      }
+    }
+  });
+  
+  return errors;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BUSINESS VALIDATION (Handbuch Rules)
+// ══════════════════════════════════════════════════════════════════════════
+
+function validateBusinessRules(belegdaten) {
+  const errors = [];
+  
+  // Check if at least one position exists
+  if (!belegdaten.positionen || belegdaten.positionen.length === 0) {
+    errors.push('Mindestens eine Position ist erforderlich');
+    return errors; // Can't validate positions if none exist
+  }
+  
+  belegdaten.positionen.forEach((pos, idx) => {
+    const typ = kontoTyp(pos.kontotitel);
+    const posNum = idx + 1;
+    
+    // Unknown account
+    if (!typ) {
+      errors.push(`Position ${posNum}, Konto '${pos.kontotitel}': Kontotitel nicht im System eingerichtet`);
+      return; // Skip further validation for unknown account
+    }
+    
+    // Bilanzkonto darf keine Kostenstelle haben
+    if (typ === 'bilanz' && pos.kostenstelle) {
+      errors.push(`Position ${posNum}, Konto '${pos.kontotitel}': Bilanzkonten dürfen keine Kostenstelle haben (eingetragen: ${pos.kostenstelle})`);
+    }
+    
+    // Aufwandskonto braucht Kostenstelle
+    if (typ && typ.startsWith('aufwand') && !pos.kostenstelle) {
+      errors.push(`Position ${posNum}, Konto '${pos.kontotitel}': Aufwandskonten benötigen eine Kostenstelle`);
+    }
+    
+    // Kostenstelle must be valid if present
+    if (pos.kostenstelle && pos.kostenstelle !== GESPERRTE_KST && !(pos.kostenstelle in KOSTENSTELLEN)) {
+      errors.push(`Position ${posNum}, Kostenstelle '${pos.kostenstelle}': Nicht im System eingerichtet. Gültige Kostenstellen: ${Object.keys(KOSTENSTELLEN).join(', ')}`);
+    }
+    
+    // USt-Schlüssel nur bei entsprechenden Konten
+    if (pos.ustSchluessel && typ === 'aufwand_ohneUSt') {
+      errors.push(`Position ${posNum}, Konto '${pos.kontotitel}': USt-Schlüssel nicht erlaubt für Konten ohne USt-Kontierung (eingetragen: ${pos.ustSchluessel})`);
+    }
+    
+    // Kein USt-Schlüssel bei Konten die USt erfordern würden, aber brutto=false
+    if (!pos.ustSchluessel && typ === 'aufwand_mitUSt' && pos.brutto) {
+      errors.push(`Position ${posNum}, Konto '${pos.kontotitel}': brutto=true erfordert einen USt-Schlüssel`);
+    }
+    
+    // USt-Schlüssel Format validation
+    if (pos.ustSchluessel) {
+      // Check for missing leading zero (VSt 7% instead of VSt 07%)
+      if (/^VSt \d%$/.test(pos.ustSchluessel)) {
+        errors.push(`Position ${posNum}, USt-Schlüssel '${pos.ustSchluessel}': Führende Null erforderlich (z.B. 'VSt 07%' statt 'VSt 7%')`);
+      }
+      // Check valid format
+      else if (!/^VSt (0[0-9]|1[0-9]|20)%$/.test(pos.ustSchluessel)) {
+        errors.push(`Position ${posNum}, USt-Schlüssel '${pos.ustSchluessel}': Ungültiges Format. Erwartet: 'VSt XX%' mit führender Null`);
+      }
+    }
+    
+    // Nettobetrag validation for brutto bookings
+    if (pos.brutto && pos.ustSchluessel && pos.kstBetrag > 0) {
+      const pct = parseFloat(pos.ustSchluessel.replace(/[^\d]/g, ''));
+      if (!isNaN(pct) && pct > 0) {
+        const expectedNet = Math.round(pos.betrag / (1 + pct / 100) * 100) / 100;
+        if (Math.abs(pos.kstBetrag - expectedNet) > 0.02) {
+          errors.push(`Position ${posNum}, Konto '${pos.kontotitel}': Kostenstellen-Betrag ${pos.kstBetrag} entspricht nicht dem erwarteten Nettobetrag ${expectedNet} (Brutto ${pos.betrag} ÷ ${1 + pct / 100})`);
+        }
+      }
+    }
+  });
+  
+  // Belegbetrag vs Positionssumme
+  const sumPos = belegdaten.positionen.reduce((s, p) => s + Math.abs(p.betrag || 0), 0);
+  const belegAbs = Math.abs(belegdaten.belegbetrag || 0);
+  if (Math.abs(sumPos - belegAbs) > 0.005) {
+    errors.push(`Belegbetrag ${belegAbs} stimmt nicht mit Summe der Positionen ${sumPos} überein (Differenz: ${Math.abs(belegAbs - sumPos).toFixed(2)})`);
+  }
+  
+  return errors;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -691,6 +905,13 @@ function parseRequest(xmlText) {
     return { error: 'XML-Parsing-Fehler: ' + parseErr[0].textContent.split('\n')[0] };
   }
 
+  // Accept WS-Security header if present (ignore for simulation)
+  const securityEls = doc.getElementsByTagNameNS(
+    'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd', 
+    'Security'
+  );
+  // No validation needed - just accept if present
+
   // Find SOAP Body
   const bodyEls = doc.getElementsByTagNameNS(SOAP_NS, 'Body');
   if (bodyEls.length === 0) {
@@ -718,13 +939,38 @@ function parseRequest(xmlText) {
     return { error: `Unbekannte Operation: "${localName}". Unterstützt: pruefeBuchbarkeit, insertBeleg` };
   }
 
-  // Find belegdaten
-  const belegdatenEl = opEl.getElementsByTagName('belegdaten')[0];
+  // Find belegdaten (namespace flexible)
+  let belegdatenEl = null;
+  for (const child of opEl.children) {
+    if (child.localName === 'belegdaten' && 
+        (child.namespaceURI === RW_NS || child.namespaceURI === null || child.namespaceURI === '')) {
+      belegdatenEl = child;
+      break;
+    }
+  }
   if (!belegdatenEl) {
     return { error: `Element <belegdaten> nicht gefunden innerhalb von <${localName}>.` };
   }
 
-  const belegdaten = parseBelegdaten(belegdatenEl);
+  // SCHEMA VALIDATION FIRST
+  const schemaErrors = [
+    ...validateRequiredElements(belegdatenEl),
+    ...validateSchemaTypes(belegdatenEl),
+    ...validatePositionsSchema(belegdatenEl)
+  ];
+  
+  if (schemaErrors.length > 0) {
+    return { error: 'Schema-Validierung fehlgeschlagen:\n• ' + schemaErrors.join('\n• ') };
+  }
+
+  const belegdaten = parseBelegdatenFlexible(belegdatenEl);
+  
+  // BUSINESS VALIDATION SECOND
+  const businessErrors = validateBusinessRules(belegdaten);
+  if (businessErrors.length > 0) {
+    return { error: 'Business-Validierung fehlgeschlagen:\n• ' + businessErrors.join('\n• ') };
+  }
+
   return { operation: localName, belegdaten };
 }
 
@@ -740,6 +986,21 @@ function parseBelegdaten(el) {
     belegbetrag:   parseFloat(getChildVal(el, 'belegbetrag')) || 0,
     text:          getChildVal(el, 'text'),
     positionen:    parsePositionen(el),
+  };
+}
+
+function parseBelegdatenFlexible(el) {
+  return {
+    status:        parseInt(getChildValFlexible(el, 'status')) || 1,
+    belegart:      getChildValFlexible(el, 'belegart'),
+    buchungsdatum: getChildValFlexible(el, 'buchungsdatum'),
+    belegdatum:    getChildValFlexible(el, 'belegdatum'),
+    konto:         getChildValFlexible(el, 'konto'),
+    waehrung:      getChildValFlexible(el, 'waehrung') || 'EUR',
+    beleg:         parseInt(getChildValFlexible(el, 'beleg')) || 0,
+    belegbetrag:   parseFloat(getChildValFlexible(el, 'belegbetrag')) || 0,
+    text:          getChildValFlexible(el, 'text'),
+    positionen:    parsePositionenFlexible(el),
   };
 }
 
@@ -765,6 +1026,41 @@ function parsePositionen(belegdatenEl) {
       kostenstelle,
       kstBetrag,
     });
+  }
+  return result;
+}
+
+function parsePositionenFlexible(belegdatenEl) {
+  const result = [];
+  // Get all belPositionen elements (namespace flexible)
+  for (const child of belegdatenEl.children) {
+    if (child.localName === 'belPositionen' && 
+        (child.namespaceURI === RW_NS || child.namespaceURI === null || child.namespaceURI === '')) {
+      
+      let kostenstelle = '';
+      let kstBetrag = 0;
+      
+      // Find aobjKontierungen (namespace flexible)
+      for (const aobjChild of child.children) {
+        if (aobjChild.localName === 'aobjKontierungen') {
+          kostenstelle = getChildValFlexible(aobjChild, 'aobj');
+          kstBetrag = parseFloat(getChildValFlexible(aobjChild, 'betrag')) || 0;
+          break;
+        }
+      }
+      
+      result.push({
+        positionsart:  getChildValFlexible(child, 'positionsart'),
+        kontotitel:    getChildValFlexible(child, 'kontotitel'),
+        betrag:        parseFloat(getChildValFlexible(child, 'betrag')) || 0,
+        betragHW:      parseFloat(getChildValFlexible(child, 'betragHW')) || 0,
+        soll:          getChildValFlexible(child, 'soll') === 'true',
+        brutto:        getChildValFlexible(child, 'brutto') === 'true',
+        ustSchluessel: getChildValFlexible(child, 'ustSchluessel'),
+        kostenstelle,
+        kstBetrag,
+      });
+    }
   }
   return result;
 }
@@ -1178,90 +1474,112 @@ const EXAMPLES = {
   pruefeBuchbarkeit: `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/">
+  xmlns:tns="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+  
+  <soapenv:Header>
+    <wsse:Security>
+      <wsse:UsernameToken>
+        <wsse:Username>name=DUMMY,database=training,mandant=100,niederlassung=1</wsse:Username>
+        <wsse:Password>dummy</wsse:Password>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </soapenv:Header>
+  
   <soapenv:Body>
-    <rw:pruefeBuchbarkeit>
-      <belegdaten>
-        <status>1</status>
-        <belegart>Umbuchung</belegart>
-        <buchungsdatum>${todayISO()}</buchungsdatum>
-        <belegdatum>${todayISO()}</belegdatum>
-        <konto>LOHN-UND GEHALTSVER</konto>
-        <waehrung>EUR</waehrung>
-        <beleg>0</beleg>
-        <belegbetrag>5000.00</belegbetrag>
-        <text>Gehaltsbuchung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</text>
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>GEHÄLTER</kontotitel>
-          <betrag>5000.00</betrag>
-          <betragHW>5000.00</betragHW>
-          <soll>true</soll>
-          <brutto>false</brutto>
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>1010</aobj>
-            <betrag>5000.00</betrag>
-            <betragHW>5000.00</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
-      </belegdaten>
-    </rw:pruefeBuchbarkeit>
+    <tns:pruefeBuchbarkeit>
+      <tns:belegdaten>
+        <tns:status>1</tns:status>
+        <tns:belegart>Umbuchung</tns:belegart>
+        <tns:buchungsdatum>${todayISO()}</tns:buchungsdatum>
+        <tns:belegdatum>${todayISO()}</tns:belegdatum>
+        <tns:konto>LOHN-UND GEHALTSVER</tns:konto>
+        <tns:waehrung>EUR</tns:waehrung>
+        <tns:beleg>0</tns:beleg>
+        <tns:belegbetrag>5000.00</tns:belegbetrag>
+        <tns:text>Gehaltsbuchung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</tns:text>
+        <tns:belPositionen>
+          <tns:positionsart>Sachbuchung</tns:positionsart>
+          <tns:kontotitel>GEHÄLTER</tns:kontotitel>
+          <tns:betrag>5000.00</tns:betrag>
+          <tns:betragHW>5000.00</tns:betragHW>
+          <tns:soll>true</tns:soll>
+          <tns:brutto>false</tns:brutto>
+          <tns:aobjKontierungen>
+            <tns:koReSicht>Kostenstelle</tns:koReSicht>
+            <tns:aobj>1010</tns:aobj>
+            <tns:betrag>5000.00</tns:betrag>
+            <tns:betragHW>5000.00</tns:betragHW>
+            <tns:soll>true</tns:soll>
+          </tns:aobjKontierungen>
+        </tns:belPositionen>
+      </tns:belegdaten>
+    </tns:pruefeBuchbarkeit>
   </soapenv:Body>
 </soapenv:Envelope>`,
 
   insertBeleg: `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/">
+  xmlns:tns="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+  
+  <soapenv:Header>
+    <wsse:Security>
+      <wsse:UsernameToken>
+        <wsse:Username>name=DUMMY,database=training,mandant=100,niederlassung=1</wsse:Username>
+        <wsse:Password>dummy</wsse:Password>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </soapenv:Header>
+  
   <soapenv:Body>
-    <rw:insertBeleg>
-      <belegdaten>
-        <status>1</status>
-        <belegart>Umbuchung</belegart>
-        <buchungsdatum>${todayISO()}</buchungsdatum>
-        <belegdatum>${todayISO()}</belegdatum>
-        <konto>VERB. LOHN U. GEHALT</konto>
-        <waehrung>EUR</waehrung>
-        <beleg>0</beleg>
-        <belegbetrag>112.54</belegbetrag>
-        <text>Reisekostenabrechnung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</text>
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>REISEKOSTEN</kontotitel>
-          <betrag>48.10</betrag>
-          <betragHW>48.10</betragHW>
-          <soll>true</soll>
-          <brutto>true</brutto>
-          <ustSchluessel>VSt 07%</ustSchluessel>
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>2010</aobj>
-            <betrag>44.95</betrag>
-            <betragHW>44.95</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>REISEKOSTEN</kontotitel>
-          <betrag>64.44</betrag>
-          <betragHW>64.44</betragHW>
-          <soll>true</soll>
-          <brutto>true</brutto>
-          <ustSchluessel>VSt 19%</ustSchluessel>
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>2010</aobj>
-            <betrag>54.15</betrag>
-            <betragHW>54.15</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
-      </belegdaten>
-      <benutzeAutoKontierung>false</benutzeAutoKontierung>
-    </rw:insertBeleg>
+    <tns:insertBeleg>
+      <tns:belegdaten>
+        <tns:status>1</tns:status>
+        <tns:belegart>Umbuchung</tns:belegart>
+        <tns:buchungsdatum>${todayISO()}</tns:buchungsdatum>
+        <tns:belegdatum>${todayISO()}</tns:belegdatum>
+        <tns:konto>VERB. LOHN U. GEHALT</tns:konto>
+        <tns:waehrung>EUR</tns:waehrung>
+        <tns:beleg>0</tns:beleg>
+        <tns:belegbetrag>112.54</tns:belegbetrag>
+        <tns:text>Reisekostenabrechnung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</tns:text>
+        <tns:belPositionen>
+          <tns:positionsart>Sachbuchung</tns:positionsart>
+          <tns:kontotitel>REISEKOSTEN</tns:kontotitel>
+          <tns:betrag>48.10</tns:betrag>
+          <tns:betragHW>48.10</tns:betragHW>
+          <tns:soll>true</tns:soll>
+          <tns:brutto>true</tns:brutto>
+          <tns:ustSchluessel>VSt 07%</tns:ustSchluessel>
+          <tns:aobjKontierungen>
+            <tns:koReSicht>Kostenstelle</tns:koReSicht>
+            <tns:aobj>2010</tns:aobj>
+            <tns:betrag>44.95</tns:betrag>
+            <tns:betragHW>44.95</tns:betragHW>
+            <tns:soll>true</tns:soll>
+          </tns:aobjKontierungen>
+        </tns:belPositionen>
+        <tns:belPositionen>
+          <tns:positionsart>Sachbuchung</tns:positionsart>
+          <tns:kontotitel>REISEKOSTEN</tns:kontotitel>
+          <tns:betrag>64.44</tns:betrag>
+          <tns:betragHW>64.44</tns:betragHW>
+          <tns:soll>true</tns:soll>
+          <tns:brutto>true</tns:brutto>
+          <tns:ustSchluessel>VSt 19%</tns:ustSchluessel>
+          <tns:aobjKontierungen>
+            <tns:koReSicht>Kostenstelle</tns:koReSicht>
+            <tns:aobj>2010</tns:aobj>
+            <tns:betrag>54.15</tns:betrag>
+            <tns:betragHW>54.15</tns:betragHW>
+            <tns:soll>true</tns:soll>
+          </tns:aobjKontierungen>
+        </tns:belPositionen>
+      </tns:belegdaten>
+      <tns:benutzeAutoKontierung>false</tns:benutzeAutoKontierung>
+    </tns:insertBeleg>
   </soapenv:Body>
 </soapenv:Envelope>`
 };
