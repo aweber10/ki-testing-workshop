@@ -692,6 +692,19 @@ function validatePositionsSchema(belegdatenEl) {
   return errors;
 }
 
+function validateKnownMisplacedElements(belegdatenEl) {
+  const errors = [];
+  const positionOnlyElements = ['aobjKontierungen', 'positionsart', 'kontotitel', 'ustSchluessel'];
+  
+  for (const child of belegdatenEl.children) {
+    if (positionOnlyElements.includes(child.localName)) {
+      errors.push(`Invalid content was found starting with element '${child.localName}'. No child element is expected at this point.`);
+    }
+  }
+  
+  return errors;
+}
+
 // ══════════════════════════════════════════════════════════════════════════
 //  BUSINESS VALIDATION (Handbuch Rules)
 // ══════════════════════════════════════════════════════════════════════════
@@ -956,6 +969,7 @@ function parseRequest(xmlText) {
   const schemaErrors = [
     ...validateRequiredElements(belegdatenEl),
     ...validateSchemaTypes(belegdatenEl),
+    ...validateKnownMisplacedElements(belegdatenEl),
     ...validatePositionsSchema(belegdatenEl)
   ];
   
