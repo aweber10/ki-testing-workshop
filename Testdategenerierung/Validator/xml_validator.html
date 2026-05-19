@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XML/XSD Validator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --border: #cbd5e1;
+    --accent: #2563eb;
+    --accent-dim: #dbeafe;
+    --ok: #16a34a;
+    --ok-dim: #dcfce7;
+    --err: #dc2626;
+    --err-dim: #fee2e2;
+    --warn: #d97706;
+    --text: #1e293b;
+    --text-dim: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  header .sub {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-left: auto;
+    font-family: var(--mono);
+  }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    padding: 1.5rem;
+    gap: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    gap: 0.75rem;
+  }
+
+  .panel-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .panel-label .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    display: inline-block;
+  }
+
+  .panel-label .dot.xml { background: var(--accent); }
+  .panel-label .dot.xsd { background: var(--warn); }
+
+  .drop-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .drop-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(79, 142, 247, 0.08);
+    border: 2px dashed var(--accent);
+    border-radius: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--accent);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .drop-zone.dragging .drop-overlay { display: flex; }
+
+  textarea {
+    flex: 1;
+    background: #fff;
+    border: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    padding: 1rem;
+    resize: none;
+    outline: none;
+    min-height: 280px;
+  }
+
+  textarea::placeholder { color: var(--text-dim); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--surface2); border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-primary:hover { background: #6ba3ff; border-color: #6ba3ff; }
+  .btn-primary:disabled { background: var(--accent-dim); border-color: var(--accent-dim); cursor: not-allowed; opacity: 0.7; }
+
+  .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.7rem; }
+
+  input[type="file"] { display: none; }
+
+  .action-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0;
+  }
+
+  .result-panel {
+    grid-column: 1 / -1;
+    min-height: 160px;
+  }
+
+  .result-inner {
+    flex: 1;
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.7;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+
+  .status-idle { color: var(--text-dim); }
+
+  .status-ok {
+    color: var(--ok);
+  }
+
+  .status-ok .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--ok-dim);
+    border: 1px solid var(--ok);
+    border-radius: 4px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .status-err .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--err-dim);
+    border: 1px solid var(--err);
+    border-radius: 4px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--err);
+    margin-bottom: 0.75rem;
+  }
+
+  .error-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .error-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 0.75rem;
+    align-items: baseline;
+  }
+
+  .error-loc {
+    color: var(--warn);
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  .error-msg { color: var(--text); }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .file-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-badge.loaded { color: var(--text); border-color: var(--accent-dim); }
+
+  .sep {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .hint {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .loading-bar {
+    display: none;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), #a78bfa);
+    background-size: 200%;
+    animation: shimmer 1s linear infinite;
+    border-radius: 0 0 2px 2px;
+  }
+
+  .loading-bar.active { display: block; }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  @media (max-width: 700px) {
+    main { grid-template-columns: 1fr; }
+    .result-panel { grid-column: 1; }
+    .action-bar { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">XSD</div>
+  <h1>XML / XSD Validator</h1>
+  <span class="sub">libxml2 · WebAssembly</span>
+</header>
+
+<main>
+  <!-- XML Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-label"><span class="dot xml"></span>XML-Dokument</span>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <span class="file-badge" id="xml-badge">kein Inhalt</span>
+        <button class="btn btn-sm" onclick="document.getElementById('xml-file').click()">Datei laden</button>
+        <button class="btn btn-sm" onclick="clearPanel('xml')">✕</button>
+      </div>
+      <input type="file" id="xml-file" accept=".xml,.soap" onchange="loadFile(this,'xml')">
+    </div>
+    <div class="drop-zone" id="xml-drop">
+      <div class="drop-overlay">XML hier ablegen</div>
+      <textarea id="xml-input" placeholder="XML hier einfügen oder Datei laden / per Drag &amp; Drop ablegen …" spellcheck="false"></textarea>
+    </div>
+    <div class="hint">Tipp: SOAP-Envelope direkt einfügen — der Body-Inhalt wird mitvalidiert.</div>
+  </div>
+
+  <!-- XSD Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-label"><span class="dot xsd"></span>XSD-Schema</span>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <span class="file-badge" id="xsd-badge">kein Inhalt</span>
+        <button class="btn btn-sm" onclick="document.getElementById('xsd-file').click()">Datei laden</button>
+        <button class="btn btn-sm" onclick="clearPanel('xsd')">✕</button>
+      </div>
+      <input type="file" id="xsd-file" accept=".xsd,.wsdl" onchange="loadFile(this,'xsd')">
+    </div>
+    <div class="drop-zone" id="xsd-drop">
+      <div class="drop-overlay">XSD hier ablegen</div>
+      <textarea id="xsd-input" placeholder="XSD-Schema hier einfügen oder Datei laden / per Drag &amp; Drop ablegen …" spellcheck="false"></textarea>
+    </div>
+    <div class="hint">WSDL-Dateien werden ebenfalls akzeptiert.</div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <button class="btn btn-primary" id="validate-btn" onclick="validate()">Validieren</button>
+    <div class="sep"></div>
+    <span id="lib-status" style="font-size:0.75rem;color:var(--text-dim);font-family:var(--mono);">
+      <span class="spinner"></span> Bibliothek wird geladen …
+    </span>
+  </div>
+
+  <!-- Result Panel -->
+  <div class="panel result-panel">
+    <div class="loading-bar" id="loading-bar"></div>
+    <div class="panel-header">
+      <span class="panel-label"><span class="dot"></span>Ergebnis</span>
+      <button class="btn btn-sm" onclick="clearResult()">Leeren</button>
+    </div>
+    <div class="result-inner" id="result">
+      <span class="status-idle">— Kein Ergebnis. XML und XSD eingeben, dann „Validieren" klicken.</span>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>Alle Daten werden ausschließlich lokal im Browser verarbeitet — es werden keine Dateien übertragen.</span>
+</footer>
+
+<script type="module">
+  // xmllint-wasm per CDN laden (benötigt https://)
+  let validateXML = null;
+
+  async function initLib() {
+    try {
+      const mod = await import('https://cdn.jsdelivr.net/npm/xmllint-wasm@5.2.0/index-browser.mjs');
+      validateXML = mod.validateXML;
+      document.getElementById('lib-status').innerHTML =
+        '<span style="color:var(--ok)">✓ Bibliothek bereit</span>';
+      document.getElementById('validate-btn').disabled = false;
+    } catch (e) {
+      document.getElementById('lib-status').innerHTML =
+        '<span style="color:var(--err)">✗ Bibliothek konnte nicht geladen werden — Internetverbindung prüfen</span>';
+    }
+  }
+
+  initLib();
+
+  // Drag & Drop
+  ['xml', 'xsd'].forEach(type => {
+    const zone = document.getElementById(`${type}-drop`);
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragging');
+      const file = e.dataTransfer.files[0];
+      if (file) readFile(file, type);
+    });
+  });
+
+  function readFile(file, type) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById(`${type}-input`).value = e.target.result;
+      const badge = document.getElementById(`${type}-badge`);
+      badge.textContent = file.name;
+      badge.classList.add('loaded');
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  window.loadFile = function(input, type) {
+    if (input.files[0]) readFile(input.files[0], type);
+  };
+
+  window.clearPanel = function(type) {
+    document.getElementById(`${type}-input`).value = '';
+    const badge = document.getElementById(`${type}-badge`);
+    badge.textContent = 'kein Inhalt';
+    badge.classList.remove('loaded');
+  };
+
+  window.clearResult = function() {
+    document.getElementById('result').innerHTML =
+      '<span class="status-idle">— Kein Ergebnis.</span>';
+  };
+
+  window.validate = async function() {
+    if (!validateXML) return;
+
+    const xml = document.getElementById('xml-input').value.trim();
+    const xsd = document.getElementById('xsd-input').value.trim();
+    const resultEl = document.getElementById('result');
+    const loadingBar = document.getElementById('loading-bar');
+
+    if (!xml) {
+      resultEl.innerHTML = '<span style="color:var(--warn)">⚠ Kein XML-Inhalt vorhanden.</span>';
+      return;
+    }
+
+    loadingBar.classList.add('active');
+    resultEl.innerHTML = '<span class="status-idle"><span class="spinner"></span> Validierung läuft …</span>';
+
+    try {
+      const options = {
+        xml: [{ fileName: 'dokument.xml', contents: xml }],
+      };
+
+      if (xsd) {
+        options.schema = [{ fileName: 'schema.xsd', contents: xsd }];
+      }
+
+      const result = await validateXML(options);
+      loadingBar.classList.remove('active');
+
+      if (result.valid) {
+        const mode = xsd ? 'gegen XSD-Schema' : '(Wohlgeformtheit)';
+        resultEl.innerHTML = `
+          <div class="status-ok">
+            <div class="badge">✓ Gültig ${mode}</div>
+            <div style="color:var(--text-dim);font-size:0.75rem;margin-top:0.25rem;">
+              ${xsd ? 'Das XML-Dokument entspricht dem angegebenen Schema.' : 'Das XML-Dokument ist wohlgeformt. Kein XSD angegeben — Schemaprüfung übersprungen.'}
+            </div>
+          </div>`;
+      } else {
+        const errors = parseErrors(result.errors);
+        const mode = xsd ? 'Schema-Validierung' : 'Wohlgeformtheit';
+        resultEl.innerHTML = `
+          <div class="status-err">
+            <div class="badge">✗ ${errors.length} Fehler — ${mode}</div>
+            <div class="error-list">${errors.map(renderError).join('')}</div>
+          </div>`;
+      }
+    } catch (e) {
+      loadingBar.classList.remove('active');
+      resultEl.innerHTML = `<span style="color:var(--err)">✗ Interner Fehler: ${escHtml(e.message)}</span>`;
+    }
+  };
+
+  function parseErrors(errorsStr) {
+    if (!errorsStr) return [];
+    return errorsStr.split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        // Format: dokument.xml:12: error : Meldung
+        const m = line.match(/^[^:]+:(\d+):\s*(?:error|warning|parser error)\s*:\s*(.+)$/i);
+        if (m) return { line: m[1], msg: m[2].trim() };
+        return { line: null, msg: line };
+      });
+  }
+
+  function renderError(e) {
+    const loc = e.line ? `<span class="error-loc">Zeile ${e.line}</span>` : '<span class="error-loc">—</span>';
+    return `<div class="error-item">${loc}<span class="error-msg">${escHtml(e.msg)}</span></div>`;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+
+</body>
+</html>
