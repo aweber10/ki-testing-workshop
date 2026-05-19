@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XML/XSD Validator</title>
+<title>XML / XSD Validator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
@@ -42,6 +42,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    background: var(--surface);
   }
 
   .logo {
@@ -53,15 +54,10 @@
     font-size: 0.7rem;
     font-weight: 600;
     color: #fff;
-    letter-spacing: -0.5px;
     flex-shrink: 0;
   }
 
-  header h1 {
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
+  header h1 { font-size: 1rem; font-weight: 600; }
 
   header .sub {
     font-size: 0.8rem;
@@ -74,13 +70,12 @@
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 0;
-    padding: 1.5rem;
     gap: 1rem;
+    padding: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+    align-content: start;
   }
 
   .panel {
@@ -100,6 +95,7 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface2);
     gap: 0.75rem;
+    flex-wrap: wrap;
   }
 
   .panel-label {
@@ -113,38 +109,21 @@
     gap: 0.5rem;
   }
 
-  .panel-label .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--border);
-    display: inline-block;
-  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); display: inline-block; }
+  .dot.xml { background: var(--accent); }
+  .dot.xsd { background: var(--warn); }
 
-  .panel-label .dot.xml { background: var(--accent); }
-  .panel-label .dot.xsd { background: var(--warn); }
-
-  .drop-zone {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
+  .drop-zone { flex: 1; display: flex; flex-direction: column; position: relative; }
 
   .drop-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(79, 142, 247, 0.08);
+    position: absolute; inset: 0;
+    background: rgba(37, 99, 235, 0.06);
     border: 2px dashed var(--accent);
     border-radius: 4px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    color: var(--accent);
-    z-index: 10;
-    pointer-events: none;
+    display: none; align-items: center; justify-content: center;
+    font-size: 0.9rem; color: var(--accent);
+    z-index: 10; pointer-events: none;
   }
-
   .drop-zone.dragging .drop-overlay { display: flex; }
 
   textarea {
@@ -158,193 +137,99 @@
     padding: 1rem;
     resize: none;
     outline: none;
-    min-height: 280px;
+    min-height: 260px;
   }
-
   textarea::placeholder { color: var(--text-dim); }
 
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
+    display: inline-flex; align-items: center; gap: 0.4rem;
     padding: 0.35rem 0.75rem;
-    border-radius: 5px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    border-radius: 5px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    font-family: var(--sans); font-size: 0.75rem; font-weight: 500;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
     white-space: nowrap;
   }
-
-  .btn:hover { background: var(--surface2); border-color: var(--accent); }
-
+  .btn:hover { background: var(--accent-dim); border-color: var(--accent); }
   .btn-primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-    padding: 0.5rem 1.25rem;
-    font-size: 0.85rem;
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    padding: 0.5rem 1.5rem; font-size: 0.85rem;
   }
-
-  .btn-primary:hover { background: #6ba3ff; border-color: #6ba3ff; }
-  .btn-primary:disabled { background: var(--accent-dim); border-color: var(--accent-dim); cursor: not-allowed; opacity: 0.7; }
-
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.7rem; }
 
   input[type="file"] { display: none; }
 
   .action-bar {
     grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0;
+    display: flex; align-items: center; gap: 1rem;
   }
 
-  .result-panel {
-    grid-column: 1 / -1;
-    min-height: 160px;
-  }
+  .result-panel { grid-column: 1 / -1; }
 
   .result-inner {
-    flex: 1;
-    padding: 1rem;
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    line-height: 1.7;
-    overflow-y: auto;
-    max-height: 320px;
+    flex: 1; padding: 1rem;
+    font-family: var(--mono); font-size: 0.8rem; line-height: 1.7;
+    overflow-y: auto; max-height: 320px;
   }
 
   .status-idle { color: var(--text-dim); }
 
-  .status-ok {
-    color: var(--ok);
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    border-radius: 4px; padding: 0.3rem 0.75rem;
+    font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;
   }
+  .badge-ok { background: var(--ok-dim); border: 1px solid var(--ok); color: var(--ok); }
+  .badge-err { background: var(--err-dim); border: 1px solid var(--err); color: var(--err); }
 
-  .status-ok .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: var(--ok-dim);
-    border: 1px solid var(--ok);
-    border-radius: 4px;
-    padding: 0.3rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .status-err .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: var(--err-dim);
-    border: 1px solid var(--err);
-    border-radius: 4px;
-    padding: 0.3rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--err);
-    margin-bottom: 0.75rem;
-  }
-
-  .error-list { display: flex; flex-direction: column; gap: 0.4rem; }
-
-  .error-item {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.5rem 0.75rem;
-    align-items: baseline;
-  }
-
-  .error-loc {
-    color: var(--warn);
-    white-space: nowrap;
-    font-size: 0.75rem;
-  }
-
+  .error-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.25rem; }
+  .error-item { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 0.75rem; align-items: baseline; }
+  .error-loc { color: var(--warn); white-space: nowrap; font-size: 0.75rem; }
   .error-msg { color: var(--text); }
 
-  .spinner {
-    display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    vertical-align: middle;
-  }
+  .sep { flex: 1; height: 1px; background: var(--border); }
 
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .file-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.2rem 0.5rem;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--mono); font-size: 0.7rem;
+    color: var(--text-dim); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 0.2rem 0.5rem; max-width: 200px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-
-  .file-badge.loaded { color: var(--text); border-color: var(--accent-dim); }
-
-  .sep {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+  .file-badge.loaded { color: var(--text); border-color: var(--accent); }
 
   .hint {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    padding: 0.5rem 1rem;
-    border-top: 1px solid var(--border);
+    font-size: 0.72rem; color: var(--text-dim);
+    padding: 0.5rem 1rem; border-top: 1px solid var(--border);
     font-family: var(--mono);
-  }
-
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 0.75rem 2rem;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    display: flex;
-    gap: 1rem;
-    align-items: center;
   }
 
   .loading-bar {
+    height: 2px; background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200%; animation: shimmer 1s linear infinite;
     display: none;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), #a78bfa);
-    background-size: 200%;
-    animation: shimmer 1s linear infinite;
-    border-radius: 0 0 2px 2px;
   }
-
   .loading-bar.active { display: block; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-  @keyframes shimmer {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
+  footer {
+    border-top: 1px solid var(--border); background: var(--surface);
+    padding: 0.75rem 2rem; font-size: 0.72rem; color: var(--text-dim);
   }
 
   @media (max-width: 700px) {
     main { grid-template-columns: 1fr; }
-    .result-panel { grid-column: 1; }
-    .action-bar { grid-column: 1; }
+    .result-panel, .action-bar { grid-column: 1; }
   }
 </style>
 </head>
@@ -353,15 +238,14 @@
 <header>
   <div class="logo">XSD</div>
   <h1>XML / XSD Validator</h1>
-  <span class="sub">libxml2 · WebAssembly</span>
+  <span class="sub">xmllint · WebAssembly</span>
 </header>
 
 <main>
-  <!-- XML Panel -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-label"><span class="dot xml"></span>XML-Dokument</span>
-      <div style="display:flex;gap:0.5rem;align-items:center;">
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <span class="file-badge" id="xml-badge">kein Inhalt</span>
         <button class="btn btn-sm" onclick="document.getElementById('xml-file').click()">Datei laden</button>
         <button class="btn btn-sm" onclick="clearPanel('xml')">✕</button>
@@ -375,11 +259,10 @@
     <div class="hint">Tipp: SOAP-Envelope direkt einfügen — der Body-Inhalt wird mitvalidiert.</div>
   </div>
 
-  <!-- XSD Panel -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-label"><span class="dot xsd"></span>XSD-Schema</span>
-      <div style="display:flex;gap:0.5rem;align-items:center;">
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <span class="file-badge" id="xsd-badge">kein Inhalt</span>
         <button class="btn btn-sm" onclick="document.getElementById('xsd-file').click()">Datei laden</button>
         <button class="btn btn-sm" onclick="clearPanel('xsd')">✕</button>
@@ -393,16 +276,14 @@
     <div class="hint">WSDL-Dateien werden ebenfalls akzeptiert.</div>
   </div>
 
-  <!-- Action Bar -->
   <div class="action-bar">
-    <button class="btn btn-primary" id="validate-btn" onclick="validate()">Validieren</button>
+    <button class="btn btn-primary" id="validate-btn" onclick="validate()" disabled>Validieren</button>
     <div class="sep"></div>
     <span id="lib-status" style="font-size:0.75rem;color:var(--text-dim);font-family:var(--mono);">
       <span class="spinner"></span> Bibliothek wird geladen …
     </span>
   </div>
 
-  <!-- Result Panel -->
   <div class="panel result-panel">
     <div class="loading-bar" id="loading-bar"></div>
     <div class="panel-header">
@@ -415,143 +296,178 @@
   </div>
 </main>
 
-<footer>
-  <span>Alle Daten werden ausschließlich lokal im Browser verarbeitet — es werden keine Dateien übertragen.</span>
-</footer>
+<footer>Alle Daten werden ausschließlich lokal im Browser verarbeitet — es werden keine Dateien übertragen.</footer>
 
-<script type="module">
-  // xmllint-wasm per CDN laden (benötigt https://)
-  let validateXML = null;
+<script>
+// Worker-Code inline eingebettet (xmllint-browser.mjs, gepatcht für wasmBinary-Übergabe)
+const WORKER_CODE = "var Module = (() => {\n  var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;\n  \n  return (\nasync function(moduleArg = {}) {\n  var moduleRtn;\n\nvar h=moduleArg,aa,ba,da=new Promise((a,b)=>{aa=a;ba=b});h.preRun=function(){h.inputFiles.forEach(function(a){var b=\"/\"+a.fileName,c=a.contents;a={};a.flags=a.flags||577;b=k(b,a.flags,a.mode);if(\"string\"==typeof c){var d=new Uint8Array(ea(c)+1);c=ha(c,d,0,d.length);n(b,d,0,c,void 0,a.ua)}else if(ArrayBuffer.isView(c))n(b,c,0,c.byteLength,void 0,a.ua);else throw Error(\"Unsupported data type\");t(b)})};var ia={...h},ja=[],ka=\"./this.program\",v=\"\",la;\n\"undefined\"!=typeof document&&document.currentScript&&(v=document.currentScript.src);_scriptName&&(v=_scriptName);v.startsWith(\"blob:\")?v=\"\":v=v.slice(0,v.replace(/[?#].*/,\"\").lastIndexOf(\"/\")+1);la=async a=>{a=await fetch(a,{credentials:\"same-origin\"});if(a.ok)return a.arrayBuffer();throw Error(a.status+\" : \"+a.url);};var ma=h.print||console.log.bind(console),x=h.printErr||console.error.bind(console);Object.assign(h,ia);ia=null;h.arguments&&(ja=h.arguments);h.thisProgram&&(ka=h.thisProgram);\nvar y=h.wasmBinary,z,na=!1,A,B,oa,C,D,E;function pa(){var a=z.buffer;h.HEAP8=A=new Int8Array(a);h.HEAP16=oa=new Int16Array(a);h.HEAPU8=B=new Uint8Array(a);h.HEAPU16=new Uint16Array(a);h.HEAP32=C=new Int32Array(a);h.HEAPU32=D=new Uint32Array(a);h.HEAPF32=new Float32Array(a);h.HEAPF64=new Float64Array(a);h.HEAP64=E=new BigInt64Array(a);h.HEAPU64=new BigUint64Array(a)}h.wasmMemory?z=h.wasmMemory:z=new WebAssembly.Memory({initial:(h.INITIAL_MEMORY||16777216)/65536,maximum:65536});pa();var F=0,G=null;\nfunction qa(){F++;h.monitorRunDependencies?.(F)}function ra(){F--;h.monitorRunDependencies?.(F);if(0==F&&G){var a=G;G=null;a()}}var sa;async function ta(a){if(!y)try{var b=await la(a);return new Uint8Array(b)}catch{}if(a==sa&&y)a=new Uint8Array(y);else throw\"both async and sync fetching of the wasm failed\";return a}\nasync function ua(a,b){try{var c=await ta(a);return await WebAssembly.instantiate(c,b)}catch(d){throw x(`failed to asynchronously prepare wasm: ${d}`),a=d,h.onAbort?.(a),a=\"Aborted(\"+a+\")\",x(a),na=!0,a=new WebAssembly.RuntimeError(a+\". Build with -sASSERTIONS for more info.\"),ba(a),a;}}\nasync function va(a){var b=sa;if(!y&&\"function\"==typeof WebAssembly.instantiateStreaming)try{var c=fetch(b,{credentials:\"same-origin\"});return await WebAssembly.instantiateStreaming(c,a)}catch(d){x(`wasm streaming compile failed: ${d}`),x(\"falling back to ArrayBuffer instantiation\")}return ua(b,a)}class wa{name=\"ExitStatus\";constructor(a){this.message=`Program terminated with exit(${a})`;this.status=a}}\nvar xa=a=>{for(;0<a.length;)a.shift()(h)},ya=[],za=[],Aa=()=>{var a=h.preRun.shift();za.unshift(a)},Ca=h.noExitRuntime||!1,Da=(a,b)=>{for(var c=0,d=a.length-1;0<=d;d--){var e=a[d];\".\"===e?a.splice(d,1):\"..\"===e?(a.splice(d,1),c++):c&&(a.splice(d,1),c--)}if(b)for(;c;c--)a.unshift(\"..\");return a},H=a=>{var b=\"/\"===a.charAt(0),c=\"/\"===a.slice(-1);(a=Da(a.split(\"/\").filter(d=>!!d),!b).join(\"/\"))||b||(a=\".\");a&&c&&(a+=\"/\");return(b?\"/\":\"\")+a},Ea=a=>{var b=/^(\\/?|)([\\s\\S]*?)((?:\\.{1,2}|[^\\/]+?|)(\\.[^.\\/]*|))(?:[\\/]*)$/.exec(a).slice(1);\na=b[0];b=b[1];if(!a&&!b)return\".\";b&&=b.slice(0,-1);return a+b},Fa=()=>a=>crypto.getRandomValues(a),Ga=a=>{(Ga=Fa())(a)},Ha=(...a)=>{for(var b=\"\",c=!1,d=a.length-1;-1<=d&&!c;d--){c=0<=d?a[d]:\"/\";if(\"string\"!=typeof c)throw new TypeError(\"Arguments to path.resolve must be strings\");if(!c)return\"\";b=c+\"/\"+b;c=\"/\"===c.charAt(0)}b=Da(b.split(\"/\").filter(e=>!!e),!c).join(\"/\");return(c?\"/\":\"\")+b||\".\"},Ia=\"undefined\"!=typeof TextDecoder?new TextDecoder:void 0,I=(a,b=0)=>{b>>>=0;for(var c=b+NaN,d=b;a[d]&&\n!(d>=c);)++d;if(16<d-b&&a.buffer&&Ia)return Ia.decode(a.subarray(b,d));for(c=\"\";b<d;){var e=a[b++];if(e&128){var f=a[b++]&63;if(192==(e&224))c+=String.fromCharCode((e&31)<<6|f);else{var g=a[b++]&63;e=224==(e&240)?(e&15)<<12|f<<6|g:(e&7)<<18|f<<12|g<<6|a[b++]&63;65536>e?c+=String.fromCharCode(e):(e-=65536,c+=String.fromCharCode(55296|e>>10,56320|e&1023))}}else c+=String.fromCharCode(e)}return c},Ja=[],ea=a=>{for(var b=0,c=0;c<a.length;++c){var d=a.charCodeAt(c);127>=d?b++:2047>=d?b+=2:55296<=d&&57343>=\nd?(b+=4,++c):b+=3}return b},ha=(a,b,c,d)=>{c>>>=0;if(!(0<d))return 0;var e=c;d=c+d-1;for(var f=0;f<a.length;++f){var g=a.charCodeAt(f);if(55296<=g&&57343>=g){var l=a.charCodeAt(++f);g=65536+((g&1023)<<10)|l&1023}if(127>=g){if(c>=d)break;b[c++>>>0]=g}else{if(2047>=g){if(c+1>=d)break;b[c++>>>0]=192|g>>6}else{if(65535>=g){if(c+2>=d)break;b[c++>>>0]=224|g>>12}else{if(c+3>=d)break;b[c++>>>0]=240|g>>18;b[c++>>>0]=128|g>>12&63}b[c++>>>0]=128|g>>6&63}b[c++>>>0]=128|g&63}}b[c>>>0]=0;return c-e},Ka=[];\nfunction La(a,b){Ka[a]={input:[],output:[],P:b};Ma(a,Na)}\nvar Na={open(a){var b=Ka[a.node.W];if(!b)throw new J(43);a.D=b;a.seekable=!1},close(a){a.D.P.$(a.D)},$(a){a.D.P.$(a.D)},read(a,b,c,d){if(!a.D||!a.D.P.la)throw new J(60);for(var e=0,f=0;f<d;f++){try{var g=a.D.P.la(a.D)}catch(l){throw new J(29);}if(void 0===g&&0===e)throw new J(6);if(null===g||void 0===g)break;e++;b[c+f]=g}e&&(a.node.R=Date.now());return e},write(a,b,c,d){if(!a.D||!a.D.P.ga)throw new J(60);try{for(var e=0;e<d;e++)a.D.P.ga(a.D,b[c+e])}catch(f){throw new J(29);}d&&(a.node.I=a.node.H=\nDate.now());return e}},Oa={la(){a:{if(!Ja.length){var a=null;\"undefined\"!=typeof window&&\"function\"==typeof window.prompt&&(a=window.prompt(\"Input: \"),null!==a&&(a+=\"\\n\"));if(!a){var b=null;break a}b=Array(ea(a)+1);a=ha(a,b,0,b.length);b.length=a;Ja=b}b=Ja.shift()}return b},ga(a,b){null===b||10===b?(ma(I(a.output)),a.output=[]):0!=b&&a.output.push(b)},$(a){0<a.output?.length&&(ma(I(a.output)),a.output=[])},za(){return{Ja:25856,La:5,Ia:191,Ka:35387,Ha:[3,28,127,21,4,0,1,0,17,19,26,0,18,15,23,22,0,\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},Aa(){return 0},Ba(){return[24,80]}},Pa={ga(a,b){null===b||10===b?(x(I(a.output)),a.output=[]):0!=b&&a.output.push(b)},$(a){0<a.output?.length&&(x(I(a.output)),a.output=[])}},Ra=a=>{a=65536*Math.ceil(a/65536);var b=Qa(65536,a);b&&B.fill(0,b,b+a);return b},K={K:null,O(){return K.createNode(null,\"/\",16895,0)},createNode(a,b,c,d){if(24576===(c&61440)||4096===(c&61440))throw new J(63);K.K||(K.K={dir:{node:{N:K.C.N,L:K.C.L,T:K.C.T,aa:K.C.aa,qa:K.C.qa,da:K.C.da,ra:K.C.ra,\nha:K.C.ha,ca:K.C.ca},stream:{J:K.B.J}},file:{node:{N:K.C.N,L:K.C.L},stream:{J:K.B.J,read:K.B.read,write:K.B.write,U:K.B.U,ba:K.B.ba}},link:{node:{N:K.C.N,L:K.C.L,X:K.C.X},stream:{}},ja:{node:{N:K.C.N,L:K.C.L},stream:Sa}});c=Ta(a,b,c,d);L(c.mode)?(c.C=K.K.dir.node,c.B=K.K.dir.stream,c.A={}):32768===(c.mode&61440)?(c.C=K.K.file.node,c.B=K.K.file.stream,c.F=0,c.A=null):40960===(c.mode&61440)?(c.C=K.K.link.node,c.B=K.K.link.stream):8192===(c.mode&61440)&&(c.C=K.K.ja.node,c.B=K.K.ja.stream);c.R=c.I=c.H=\nDate.now();a&&(a.A[b]=c,a.R=a.I=a.H=c.R);return c},Oa(a){return a.A?a.A.subarray?a.A.subarray(0,a.F):new Uint8Array(a.A):new Uint8Array(0)},C:{N(a){var b={};b.va=8192===(a.mode&61440)?a.id:1;b.xa=a.id;b.mode=a.mode;b.Ea=1;b.uid=0;b.wa=0;b.W=a.W;L(a.mode)?b.size=4096:32768===(a.mode&61440)?b.size=a.F:40960===(a.mode&61440)?b.size=a.link.length:b.size=0;b.R=new Date(a.R);b.I=new Date(a.I);b.H=new Date(a.H);b.sa=4096;b.ta=Math.ceil(b.size/b.sa);return b},L(a,b){for(var c of[\"mode\",\"atime\",\"mtime\",\"ctime\"])null!=\nb[c]&&(a[c]=b[c]);void 0!==b.size&&(b=b.size,a.F!=b&&(0==b?(a.A=null,a.F=0):(c=a.A,a.A=new Uint8Array(b),c&&a.A.set(c.subarray(0,Math.min(b,a.F))),a.F=b)))},T(){throw K.ka;},aa(a,b,c,d){return K.createNode(a,b,c,d)},qa(a,b,c){try{var d=M(b,c)}catch(f){}if(d){if(L(a.mode))for(var e in d.A)throw new J(55);Ua(d)}delete a.parent.A[a.name];b.A[c]=a;a.name=c;b.H=b.I=a.parent.H=a.parent.I=Date.now()},da(a,b){delete a.A[b];a.H=a.I=Date.now()},ra(a,b){var c=M(a,b),d;for(d in c.A)throw new J(55);delete a.A[b];\na.H=a.I=Date.now()},ha(a){return[\".\",\"..\",...Object.keys(a.A)]},ca(a,b,c){a=K.createNode(a,b,41471,0);a.link=c;return a},X(a){if(40960!==(a.mode&61440))throw new J(28);return a.link}},B:{read(a,b,c,d,e){var f=a.node.A;if(e>=a.node.F)return 0;a=Math.min(a.node.F-e,d);if(8<a&&f.subarray)b.set(f.subarray(e,e+a),c);else for(d=0;d<a;d++)b[c+d]=f[e+d];return a},write(a,b,c,d,e,f){b.buffer===A.buffer&&(f=!1);if(!d)return 0;a=a.node;a.I=a.H=Date.now();if(b.subarray&&(!a.A||a.A.subarray)){if(f)return a.A=\nb.subarray(c,c+d),a.F=d;if(0===a.F&&0===e)return a.A=b.slice(c,c+d),a.F=d;if(e+d<=a.F)return a.A.set(b.subarray(c,c+d),e),d}f=e+d;var g=a.A?a.A.length:0;g>=f||(f=Math.max(f,g*(1048576>g?2:1.125)>>>0),0!=g&&(f=Math.max(f,256)),g=a.A,a.A=new Uint8Array(f),0<a.F&&a.A.set(g.subarray(0,a.F),0));if(a.A.subarray&&b.subarray)a.A.set(b.subarray(c,c+d),e);else for(f=0;f<d;f++)a.A[e+f]=b[c+f];a.F=Math.max(a.F,e+d);return d},J(a,b,c){1===c?b+=a.position:2===c&&32768===(a.node.mode&61440)&&(b+=a.node.F);if(0>\nb)throw new J(28);return b},U(a,b,c,d,e){if(32768!==(a.node.mode&61440))throw new J(43);a=a.node.A;if(e&2||!a||a.buffer!==A.buffer){d=!0;e=Ra(b);if(!e)throw new J(48);if(a){if(0<c||c+b<a.length)a.subarray?a=a.subarray(c,c+b):a=Array.prototype.slice.call(a,c,c+b);A.set(a,e>>>0)}}else d=!1,e=a.byteOffset;return{pa:e,ia:d}},ba(a,b,c,d){K.B.write(a,b,0,d,c,!1);return 0}}},Va=async a=>{a=await la(a);return new Uint8Array(a)},Wa=h.preloadPlugins||[],Xa=(a,b,c,d)=>{\"undefined\"!=typeof Browser&&Browser.Pa();\nvar e=!1;Wa.forEach(f=>{!e&&f.canHandle(b)&&(f.handle(a,b,c,d),e=!0)});return e},Za=(a,b,c,d,e,f,g,l,p,m)=>{function r(w){function T(ca){m?.();l||Ya(a,b,ca,d,e,p);f?.();ra(u)}Xa(w,q,T,()=>{g?.();ra(u)})||T(w)}var q=b?Ha(H(a+\"/\"+b)):a,u=`cp ${q}`;qa(u);\"string\"==typeof c?Va(c).then(r,g):r(c)},$a=(a,b)=>{var c=0;a&&(c|=365);b&&(c|=146);return c},ab=null,bb={},N=[],cb=1,O=null,db=!1,eb=!0,fb={},J=class{name=\"ErrnoError\";constructor(a){this.G=a}},gb=class{Y={};node=null;get flags(){return this.Y.flags}set flags(a){this.Y.flags=\na}get position(){return this.Y.position}set position(a){this.Y.position=a}},hb=class{C={};B={};V=null;constructor(a,b,c,d){a||=this;this.parent=a;this.O=a.O;this.id=cb++;this.name=b;this.mode=c;this.W=d;this.R=this.I=this.H=Date.now()}get read(){return 365===(this.mode&365)}set read(a){a?this.mode|=365:this.mode&=-366}get write(){return 146===(this.mode&146)}set write(a){a?this.mode|=146:this.mode&=-147}get Ca(){return L(this.mode)}get ma(){return 8192===(this.mode&61440)}};\nfunction P(a,b={}){if(!a)throw new J(44);b.ea??(b.ea=!0);\"/\"===a.charAt(0)||(a=\"//\"+a);var c=0;a:for(;40>c;c++){a=a.split(\"/\").filter(l=>!!l);for(var d=ab,e=\"/\",f=0;f<a.length;f++){var g=f===a.length-1;if(g&&b.parent)break;if(\".\"!==a[f])if(\"..\"===a[f])e=Ea(e),d=d.parent;else{e=H(e+\"/\"+a[f]);try{d=M(d,a[f])}catch(l){if(44===l?.G&&g&&b.Fa)return{path:e};throw l;}!d.V||g&&!b.ea||(d=d.V.root);if(40960===(d.mode&61440)&&(!g||b.Z)){if(!d.C.X)throw new J(52);d=d.C.X(d);\"/\"===d.charAt(0)||(d=Ea(e)+\"/\"+d);\na=d+\"/\"+a.slice(f+1).join(\"/\");continue a}}}return{path:e,node:d}}throw new J(32);}function Q(a){for(var b;;){if(a===a.parent)return a=a.O.oa,b?\"/\"!==a[a.length-1]?`${a}/${b}`:a+b:a;b=b?`${a.name}/${b}`:a.name;a=a.parent}}function ib(a,b){for(var c=0,d=0;d<b.length;d++)c=(c<<5)-c+b.charCodeAt(d)|0;return(a+c>>>0)%O.length}function Ua(a){var b=ib(a.parent.id,a.name);if(O[b]===a)O[b]=a.S;else for(b=O[b];b;){if(b.S===a){b.S=a.S;break}b=b.S}}\nfunction M(a,b){var c=L(a.mode)?(c=R(a,\"x\"))?c:a.C.T?0:2:54;if(c)throw new J(c);for(c=O[ib(a.id,b)];c;c=c.S){var d=c.name;if(c.parent.id===a.id&&d===b)return c}return a.C.T(a,b)}function Ta(a,b,c,d){a=new hb(a,b,c,d);b=ib(a.parent.id,a.name);a.S=O[b];return O[b]=a}function L(a){return 16384===(a&61440)}function jb(a){var b=[\"r\",\"w\",\"rw\"][a&3];a&512&&(b+=\"w\");return b}\nfunction R(a,b){if(eb)return 0;if(!b.includes(\"r\")||a.mode&292){if(b.includes(\"w\")&&!(a.mode&146)||b.includes(\"x\")&&!(a.mode&73))return 2}else return 2;return 0}function kb(a,b){if(!L(a.mode))return 54;try{return M(a,b),20}catch(c){}return R(a,\"wx\")}function lb(a){if(!a)throw new J(63);return a}function S(a){a=N[a];if(!a)throw new J(8);return a}function mb(a,b=-1){a=Object.assign(new gb,a);if(-1==b)a:{for(b=0;4096>=b;b++)if(!N[b])break a;throw new J(33);}a.M=b;return N[b]=a}\nfunction nb(a,b=-1){a=mb(a,b);a.B?.Na?.(a);return a}function ob(a,b){var c=null?.B.L,d=c?null:a;c??=a.C.L;lb(c);c(d,b)}var Sa={open(a){a.B=bb[a.node.W].B;a.B.open?.(a)},J(){throw new J(70);}};function Ma(a,b){bb[a]={B:b}}function qb(a,b){var c=\"/\"===b;if(c&&ab)throw new J(10);if(!c&&b){var d=P(b,{ea:!1});b=d.path;d=d.node;if(d.V)throw new J(10);if(!L(d.mode))throw new J(54);}b={type:a,Qa:{},oa:b,Da:[]};a=a.O(b);a.O=b;b.root=a;c?ab=a:d&&(d.V=b,d.O&&d.O.Da.push(b))}\nfunction rb(a,b,c){var d=P(a,{parent:!0}).node;a=a&&a.match(/([^\\/]+|\\/)\\/*$/)[1];if(!a)throw new J(28);if(\".\"===a||\"..\"===a)throw new J(20);var e=kb(d,a);if(e)throw new J(e);if(!d.C.aa)throw new J(63);return d.C.aa(d,a,b,c)}function sb(a,b=438){return rb(a,b&4095|32768,0)}function U(a){return rb(a,16895,0)}function tb(a,b,c){\"undefined\"==typeof c&&(c=b,b=438);return rb(a,b|8192,c)}\nfunction ub(a,b){if(!Ha(a))throw new J(44);var c=P(b,{parent:!0}).node;if(!c)throw new J(44);b=b&&b.match(/([^\\/]+|\\/)\\/*$/)[1];var d=kb(c,b);if(d)throw new J(d);if(!c.C.ca)throw new J(63);c.C.ca(c,b,a)}function vb(a){var b=P(a,{parent:!0}).node;if(!b)throw new J(44);a=a&&a.match(/([^\\/]+|\\/)\\/*$/)[1];var c=M(b,a);a:{try{var d=M(b,a)}catch(f){d=f.G;break a}var e=R(b,\"wx\");d=e?e:L(d.mode)?31:0}if(d)throw new J(d);if(!b.C.da)throw new J(63);if(c.V)throw new J(10);b.C.da(b,a);Ua(c)}\nfunction wb(a,b){a=\"string\"==typeof a?P(a,{Z:!0}).node:a;ob(a,{mode:b&4095|a.mode&-4096,H:Date.now(),Ma:void 0})}\nfunction k(a,b,c=438){if(\"\"===a)throw new J(44);if(\"string\"==typeof b){var d={r:0,\"r+\":2,w:577,\"w+\":578,a:1089,\"a+\":1090}[b];if(\"undefined\"==typeof d)throw Error(`Unknown file open mode: ${b}`);b=d}c=b&64?c&4095|32768:0;if(\"object\"==typeof a)d=a;else{var e=a.endsWith(\"/\");a=P(a,{Z:!(b&131072),Fa:!0});d=a.node;a=a.path}var f=!1;if(b&64)if(d){if(b&128)throw new J(20);}else{if(e)throw new J(31);d=rb(a,c|511,0);f=!0}if(!d)throw new J(44);8192===(d.mode&61440)&&(b&=-513);if(b&65536&&!L(d.mode))throw new J(54);\nif(!f&&(e=d?40960===(d.mode&61440)?32:L(d.mode)&&(\"r\"!==jb(b)||b&576)?31:R(d,jb(b)):44))throw new J(e);if(b&512&&!f){e=d;e=\"string\"==typeof e?P(e,{Z:!0}).node:e;if(L(e.mode))throw new J(31);if(32768!==(e.mode&61440))throw new J(28);var g=R(e,\"w\");if(g)throw new J(g);ob(e,{size:0,timestamp:Date.now()})}b&=-131713;e=mb({node:d,path:Q(d),flags:b,seekable:!0,position:0,B:d.B,Ga:[],error:!1});e.B.open&&e.B.open(e);f&&wb(d,c&511);!h.logReadFiles||b&1||a in fb||(fb[a]=1);return e}\nfunction t(a){if(null===a.M)throw new J(8);a.fa&&(a.fa=null);try{a.B.close&&a.B.close(a)}catch(b){throw b;}finally{N[a.M]=null}a.M=null}function xb(a,b,c){if(null===a.M)throw new J(8);if(!a.seekable||!a.B.J)throw new J(70);if(0!=c&&1!=c&&2!=c)throw new J(28);a.position=a.B.J(a,b,c);a.Ga=[]}\nfunction n(a,b,c,d,e,f){if(0>d||0>e)throw new J(28);if(null===a.M)throw new J(8);if(0===(a.flags&2097155))throw new J(8);if(L(a.node.mode))throw new J(31);if(!a.B.write)throw new J(28);a.seekable&&a.flags&1024&&xb(a,0,2);var g=\"undefined\"!=typeof e;if(!g)e=a.position;else if(!a.seekable)throw new J(70);b=a.B.write(a,b,c,d,e,f);g||(a.position+=b);return b}\nfunction yb(a,b){a=\"string\"==typeof a?a:Q(a);for(b=b.split(\"/\").reverse();b.length;){var c=b.pop();if(c){var d=H(a+\"/\"+c);try{U(d)}catch(e){if(20!=e.G)throw e;}a=d}}return d}function zb(a,b,c,d){a=H((\"string\"==typeof a?a:Q(a))+\"/\"+b);return sb(a,$a(c,d))}\nfunction Ya(a,b,c,d,e,f){var g=b;a&&(a=\"string\"==typeof a?a:Q(a),g=b?H(a+\"/\"+b):a);a=$a(d,e);g=sb(g,a);if(c){if(\"string\"==typeof c){b=Array(c.length);d=0;for(e=c.length;d<e;++d)b[d]=c.charCodeAt(d);c=b}wb(g,a|146);b=k(g,577);n(b,c,0,c.length,0,f);t(b);wb(g,a)}}\nfunction V(a,b,c,d){a=H((\"string\"==typeof a?a:Q(a))+\"/\"+b);b=$a(!!c,!!d);V.na??(V.na=64);var e=V.na++<<8|0;Ma(e,{open(f){f.seekable=!1},close(){d?.buffer?.length&&d(10)},read(f,g,l,p){for(var m=0,r=0;r<p;r++){try{var q=c()}catch(u){throw new J(29);}if(void 0===q&&0===m)throw new J(6);if(null===q||void 0===q)break;m++;g[l+r]=q}m&&(f.node.R=Date.now());return m},write(f,g,l,p){for(var m=0;m<p;m++)try{d(g[l+m])}catch(r){throw new J(29);}p&&(f.node.I=f.node.H=Date.now());return m}});return tb(a,b,e)}\nfunction Ab(a){if(!(a.ma||a.Ca||a.link||a.A)){if(\"undefined\"!=typeof XMLHttpRequest)throw Error(\"Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.\");try{a.A=(void 0)(a.url),a.F=a.A.length}catch(b){throw new J(29);}}}\nfunction Bb(a,b,c,d,e){function f(p,m,r,q,u){p=p.node.A;if(u>=p.length)return 0;q=Math.min(p.length-u,q);if(p.slice)for(var w=0;w<q;w++)m[r+w]=p[u+w];else for(w=0;w<q;w++)m[r+w]=p.get(u+w);return q}if(\"undefined\"!=typeof XMLHttpRequest)throw\"Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc\";c={ma:!1,url:c};var g=zb(a,b,d,e);c.A?g.A=c.A:c.url&&(g.A=null,g.url=c.url);Object.defineProperties(g,{F:{get:function(){return this.A.length}}});\nvar l={};Object.keys(g.B).forEach(p=>{var m=g.B[p];l[p]=(...r)=>{Ab(g);return m(...r)}});l.read=(p,m,r,q,u)=>{Ab(g);return f(p,m,r,q,u)};l.U=(p,m,r)=>{Ab(g);var q=Ra(m);if(!q)throw new J(48);f(p,A,q,m,r);return{pa:q,ia:!0}};g.B=l;return g}\nvar W={},Cb=a=>(a>>>=0)?I(B,a):\"\",X=void 0,Y=()=>{var a=C[+X>>>2>>>0];X+=4;return a},Db={},Fb=()=>{if(!Eb){var a={USER:\"web_user\",LOGNAME:\"web_user\",PATH:\"/\",PWD:\"/\",HOME:\"/home/web_user\",LANG:(\"object\"==typeof navigator&&navigator.languages&&navigator.languages[0]||\"C\").replace(\"-\",\"_\")+\".UTF-8\",_:ka||\"./this.program\"},b;for(b in Db)void 0===Db[b]?delete a[b]:a[b]=Db[b];var c=[];for(b in a)c.push(`${b}=${a[b]}`);Eb=c}return Eb},Eb,Ib=a=>{if(!Ca){Gb();db=!1;Hb(0);for(var b of N)b&&t(b)}Ca||(h.onExit?.(a),\nna=!0);throw new wa(a);};O=Array(4096);qb(K,\"/\");U(\"/tmp\");U(\"/home\");U(\"/home/web_user\");(function(){U(\"/dev\");Ma(259,{read:()=>0,write:(d,e,f,g)=>g,J:()=>0});tb(\"/dev/null\",259);La(1280,Oa);La(1536,Pa);tb(\"/dev/tty\",1280);tb(\"/dev/tty1\",1536);var a=new Uint8Array(1024),b=0,c=()=>{0===b&&(Ga(a),b=a.byteLength);return a[--b]};V(\"/dev\",\"random\",c);V(\"/dev\",\"urandom\",c);U(\"/dev/shm\");U(\"/dev/shm/tmp\")})();\n(function(){U(\"/proc\");var a=U(\"/proc/self\");U(\"/proc/self/fd\");qb({O(){var b=Ta(a,\"fd\",16895,73);b.B={J:K.B.J};b.C={T(c,d){c=+d;var e=S(c);c={parent:null,O:{oa:\"fake\"},C:{X:()=>e.path},id:c+1};return c.parent=c},ha(){return Array.from(N.entries()).filter(([,c])=>c).map(([c])=>c.toString())}};return b}},\"/proc/self/fd\")})();h.FS_createPath=yb;h.FS_createDataFile=Ya;h.FS_createPreloadedFile=Za;h.FS_unlink=vb;h.FS_createLazyFile=Bb;h.FS_createDevice=V;K.ka=new J(44);K.ka.stack=\"<generic error, no stack>\";\nvar Jb={k:function(a){try{var b=S(a);return nb(b).M}catch(c){if(\"undefined\"==typeof W||\"ErrnoError\"!==c.name)throw c;return-c.G}},f:function(a,b,c){X=c>>>0;try{var d=S(a);switch(b){case 0:var e=Y();if(0>e)break;for(;N[e];)e++;return nb(d,e).M;case 1:case 2:return 0;case 3:return d.flags;case 4:return e=Y(),d.flags|=e,0;case 12:return e=Y(),oa[e+0>>>1>>>0]=2,0;case 13:case 14:return 0}return-28}catch(f){if(\"undefined\"==typeof W||\"ErrnoError\"!==f.name)throw f;return-f.G}},j:function(a,b,c){X=c>>>0;\ntry{var d=S(a);switch(b){case 21509:return d.D?0:-59;case 21505:if(!d.D)return-59;if(d.D.P.za){a=[3,28,127,21,4,0,1,0,17,19,26,0,18,15,23,22,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];var e=Y();C[e>>>2>>>0]=25856;C[e+4>>>2>>>0]=5;C[e+8>>>2>>>0]=191;C[e+12>>>2>>>0]=35387;for(var f=0;32>f;f++)A[e+f+17>>>0]=a[f]||0}return 0;case 21510:case 21511:case 21512:return d.D?0:-59;case 21506:case 21507:case 21508:if(!d.D)return-59;if(d.D.P.Aa)for(e=Y(),a=[],f=0;32>f;f++)a.push(A[e+f+17>>>0]);return 0;case 21519:if(!d.D)return-59;\ne=Y();return C[e>>>2>>>0]=0;case 21520:return d.D?-28:-59;case 21531:e=Y();if(!d.B.ya)throw new J(59);return d.B.ya(d,b,e);case 21523:if(!d.D)return-59;d.D.P.Ba&&(f=[24,80],e=Y(),oa[e>>>1>>>0]=f[0],oa[e+2>>>1>>>0]=f[1]);return 0;case 21524:return d.D?0:-59;case 21515:return d.D?0:-59;default:return-28}}catch(g){if(\"undefined\"==typeof W||\"ErrnoError\"!==g.name)throw g;return-g.G}},g:function(a,b,c,d){b>>>=0;X=d>>>=0;try{b=Cb(b);var e=b;if(\"/\"===e.charAt(0))b=e;else{var f=-100===a?\"/\":S(a).path;if(0==\ne.length)throw new J(44);b=f+\"/\"+e}var g=d?Y():0;return k(b,c,g).M}catch(l){if(\"undefined\"==typeof W||\"ErrnoError\"!==l.name)throw l;return-l.G}},m:function(a,b){a>>>=0;b>>>=0;try{a=Cb(a);var c=P(a,{Z:!0}).node;var d=lb(c.C.N)(c);C[b>>>2>>>0]=d.va;C[b+4>>>2>>>0]=d.mode;D[b+8>>>2>>>0]=d.Ea;C[b+12>>>2>>>0]=d.uid;C[b+16>>>2>>>0]=d.wa;C[b+20>>>2>>>0]=d.W;E[b+24>>>3]=BigInt(d.size);C[b+32>>>2>>>0]=4096;C[b+36>>>2>>>0]=d.ta;var e=d.R.getTime(),f=d.I.getTime(),g=d.H.getTime();E[b+40>>>3]=BigInt(Math.floor(e/\n1E3));D[b+48>>>2>>>0]=e%1E3*1E6;E[b+56>>>3]=BigInt(Math.floor(f/1E3));D[b+64>>>2>>>0]=f%1E3*1E6;E[b+72>>>3]=BigInt(Math.floor(g/1E3));D[b+80>>>2>>>0]=g%1E3*1E6;E[b+88>>>3]=BigInt(d.xa);return 0}catch(l){if(\"undefined\"==typeof W||\"ErrnoError\"!==l.name)throw l;return-l.G}},n:function(a,b,c,d,e,f,g){a>>>=0;e=-9007199254740992>e||9007199254740992<e?NaN:Number(e);f>>>=0;g>>>=0;try{if(isNaN(e))return 61;var l=S(d);if(0!==(b&2)&&0===(c&2)&&2!==(l.flags&2097155))throw new J(2);if(1===(l.flags&2097155))throw new J(2);\nif(!l.B.U)throw new J(43);if(!a)throw new J(28);var p=l.B.U(l,a,e,b,c);var m=p.pa;C[f>>>2>>>0]=p.ia;D[g>>>2>>>0]=m;return 0}catch(r){if(\"undefined\"==typeof W||\"ErrnoError\"!==r.name)throw r;return-r.G}},o:function(a,b,c,d,e,f){a>>>=0;b>>>=0;f=-9007199254740992>f||9007199254740992<f?NaN:Number(f);try{var g=S(e);if(c&2){if(32768!==(g.node.mode&61440))throw new J(43);d&2||g.B.ba&&g.B.ba(g,B.slice(a,a+b),f,b,d)}}catch(l){if(\"undefined\"==typeof W||\"ErrnoError\"!==l.name)throw l;return-l.G}},h:()=>Date.now(),\nl:function(a){a>>>=0;var b=B.length;if(4294901760<a)return!1;for(var c=1;4>=c;c*=2){var d=b*(1+.2/c);d=Math.min(d,a+100663296);a:{d=(Math.min(4294901760,65536*Math.ceil(Math.max(a,d)/65536))-z.buffer.byteLength+65535)/65536|0;try{z.grow(d);pa();var e=1;break a}catch(f){}e=void 0}if(e)return!0}return!1},q:function(a,b){a>>>=0;b>>>=0;var c=0;Fb().forEach((d,e)=>{var f=b+c;e=D[a+4*e>>>2>>>0]=f;for(f=0;f<d.length;++f)A[e++>>>0]=d.charCodeAt(f);A[e>>>0]=0;c+=d.length+1});return 0},i:function(a,b){a>>>=\n0;b>>>=0;var c=Fb();D[a>>>2>>>0]=c.length;var d=0;c.forEach(e=>d+=e.length+1);D[b>>>2>>>0]=d;return 0},d:Ib,c:function(a){try{var b=S(a);t(b);return 0}catch(c){if(\"undefined\"==typeof W||\"ErrnoError\"!==c.name)throw c;return c.G}},e:function(a,b,c,d){b>>>=0;c>>>=0;d>>>=0;try{a:{var e=S(a);a=b;for(var f,g=b=0;g<c;g++){var l=D[a>>>2>>>0],p=D[a+4>>>2>>>0];a+=8;var m=e,r=l,q=p,u=f,w=A;if(0>q||0>u)throw new J(28);if(null===m.M)throw new J(8);if(1===(m.flags&2097155))throw new J(8);if(L(m.node.mode))throw new J(31);\nif(!m.B.read)throw new J(28);var T=\"undefined\"!=typeof u;if(!T)u=m.position;else if(!m.seekable)throw new J(70);var ca=m.B.read(m,w,r,q,u);T||(m.position+=ca);var fa=ca;if(0>fa){var pb=-1;break a}b+=fa;if(fa<p)break;\"undefined\"!=typeof f&&(f+=fa)}pb=b}D[d>>>2>>>0]=pb;return 0}catch(Ba){if(\"undefined\"==typeof W||\"ErrnoError\"!==Ba.name)throw Ba;return Ba.G}},p:function(a,b,c,d){b=-9007199254740992>b||9007199254740992<b?NaN:Number(b);d>>>=0;try{if(isNaN(b))return 61;var e=S(a);xb(e,b,c);E[d>>>3]=BigInt(e.position);\ne.fa&&0===b&&0===c&&(e.fa=null);return 0}catch(f){if(\"undefined\"==typeof W||\"ErrnoError\"!==f.name)throw f;return f.G}},b:function(a,b,c,d){b>>>=0;c>>>=0;d>>>=0;try{a:{var e=S(a);a=b;for(var f,g=b=0;g<c;g++){var l=D[a>>>2>>>0],p=D[a+4>>>2>>>0];a+=8;var m=n(e,A,l,p,f);if(0>m){var r=-1;break a}b+=m;if(m<p)break;\"undefined\"!=typeof f&&(f+=m)}r=b}D[d>>>2>>>0]=r;return 0}catch(q){if(\"undefined\"==typeof W||\"ErrnoError\"!==q.name)throw q;return q.G}},a:z},Z=await (async function(){function a(d){Z=\nd.exports;Z=Kb();ra(\"wasm-instantiate\");return Z}qa(\"wasm-instantiate\");var b={a:Jb};if(h.instantiateWasm)return new Promise(d=>{h.instantiateWasm(b,(e,f)=>{a(e,f);d(e.exports)})});sa??=h.locateFile?h.locateFile(\"xmllint.wasm\",v):v+\"xmllint.wasm\";try{var c=await va(b);return a(c.instance)}catch(d){return ba(d),Promise.reject(d)}}()),Lb=h._main=Z.s,Hb=Z.u,Gb=Z.v,Qa=Z.w,Mb=Z.x;\nfunction Kb(){var a=Z;a=Object.assign({},a);a.w=(b=>(c,d)=>b(c,d)>>>0)(a.w);a.x=(b=>c=>b(c)>>>0)(a.x);a.emscripten_stack_get_current=(b=>()=>b()>>>0)(a.emscripten_stack_get_current);return a}h.addRunDependency=qa;h.removeRunDependency=ra;h.FS_createPreloadedFile=Za;h.FS_unlink=a=>vb(a);h.FS_createPath=yb;h.FS_createDevice=V;h.FS_createDataFile=(a,b,c,d,e,f)=>{Ya(a,b,c,d,e,f)};h.FS_createLazyFile=Bb;\nfunction Nb(a=[]){a.unshift(ka);var b=a.length,c=Mb(4*(b+1)),d=c;a.forEach(f=>{var g=D,l=d>>>2>>>0,p=ea(f)+1,m=Mb(p);ha(f,B,m,p);g[l]=m;d+=4});D[d>>>2>>>0]=0;try{var e=Lb(b,c);Ib(e,!0)}catch(f){if(!(f instanceof wa||\"unwind\"==f))throw f;}}\nfunction Ob(a=ja){function b(){h.calledRun=!0;if(!na){if(!h.noFSInit&&!db){var c,d;db=!0;c??=h.stdin;d??=h.stdout;e??=h.stderr;c?V(\"/dev\",\"stdin\",c):ub(\"/dev/tty\",\"/dev/stdin\");d?V(\"/dev\",\"stdout\",null,d):ub(\"/dev/tty\",\"/dev/stdout\");e?V(\"/dev\",\"stderr\",null,e):ub(\"/dev/tty1\",\"/dev/stderr\");k(\"/dev/stdin\",0);k(\"/dev/stdout\",1);k(\"/dev/stderr\",1)}Z.r();eb=!1;aa(h);h.onRuntimeInitialized?.();h.noInitialRun||Nb(a);if(h.postRun)for(\"function\"==typeof h.postRun&&(h.postRun=[h.postRun]);h.postRun.length;){var e=\nh.postRun.shift();ya.unshift(e)}xa(ya)}}if(0<F)G=Ob;else{if(h.preRun)for(\"function\"==typeof h.preRun&&(h.preRun=[h.preRun]);h.preRun.length;)Aa();xa(za);0<F?G=Ob:h.setStatus?(h.setStatus(\"Running...\"),setTimeout(()=>{setTimeout(()=>h.setStatus(\"\"),1);b()},1)):b()}}if(h.preInit)for(\"function\"==typeof h.preInit&&(h.preInit=[h.preInit]);0<h.preInit.length;)h.preInit.pop()();Ob();moduleRtn=da;\n\n\n  return moduleRtn;\n}\n);\n})();\nif (typeof exports === 'object' && typeof module === 'object') {\n  module.exports = Module;\n  // This default export looks redundant, but it allows TS to import this\n  // commonjs style module.\n  module.exports.default = Module;\n} else if (typeof define === 'function' && define['amd'])\n  define([], () => Module);\n;(function initWorker() {\n\n\tlet stdout = '';\n\tlet stderr = '';\n\n\tfunction onExit(exitCode) {\n\t\tconst message = {\n\t\t\texitCode,\n\t\t\tstdout,\n\t\t\tstderr,\n\t\t};\n\t\tpostMessage(message);\n\t};\n\tfunction onWorkerMessage(event) {\n\t\tvar data = event.data;\n\t\tconst wasmMemory = new WebAssembly.Memory({\n\t\t\tinitial: data.initialMemory,\n\t\t\tmaximum: data.maxMemory\n\t\t});\n\n\t\tModule({\n\t\t\tinputFiles: data.inputFiles,\n\t\t\targuments: data.args,\n\t\t\tprint(text) { stdout += text + '\\n'; },\n\t\t\tprintErr(text) { stderr += text + '\\n'; },\n\t\t\tonExit,\n\t\t\tonAbort(reason) {\n\t\t\t\tpostMessage({ exitCode: -1, stdout: '', stderr: 'WASM Abort: ' + reason });\n\t\t\t},\n\t\t\twasmMemory,\n\t\t\twasmBinary: data.wasmBinary,\n\t\t});\n\t}\n\n\n\taddEventListener('message', onWorkerMessage);\n})();\n";
 
-  async function initLib() {
-    try {
-      const mod = await import('https://cdn.jsdelivr.net/npm/xmllint-wasm@5.2.0/index-browser.mjs');
-      validateXML = mod.validateXML;
-      document.getElementById('lib-status').innerHTML =
-        '<span style="color:var(--ok)">✓ Bibliothek bereit</span>';
-      document.getElementById('validate-btn').disabled = false;
-    } catch (e) {
-      document.getElementById('lib-status').innerHTML =
-        '<span style="color:var(--err)">✗ Bibliothek konnte nicht geladen werden — Internetverbindung prüfen</span>';
-    }
+const WASM_URL = 'https://cdn.jsdelivr.net/npm/xmllint-wasm@5.2.0/xmllint.wasm';
+
+let wasmBinary = null;
+
+// WASM-Binary im Haupt-Thread laden (normaler fetch, kein Worker-Problem)
+async function initLib() {
+  try {
+    const res = await fetch(WASM_URL);
+    if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+    wasmBinary = await res.arrayBuffer();
+    document.getElementById('lib-status').innerHTML =
+      '<span style="color:var(--ok)">✓ Bibliothek bereit</span>';
+    document.getElementById('validate-btn').disabled = false;
+  } catch (e) {
+    document.getElementById('lib-status').innerHTML =
+      '<span style="color:var(--err)">✗ Bibliothek konnte nicht geladen werden — Internetverbindung prüfen (' + escHtml(e.message) + ')</span>';
   }
+}
 
-  initLib();
+initLib();
 
-  // Drag & Drop
-  ['xml', 'xsd'].forEach(type => {
-    const zone = document.getElementById(`${type}-drop`);
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('dragging');
-      const file = e.dataTransfer.files[0];
-      if (file) readFile(file, type);
-    });
+// Drag & Drop
+['xml', 'xsd'].forEach(type => {
+  const zone = document.getElementById(type + '-drop');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) readFile(file, type);
   });
+});
 
-  function readFile(file, type) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById(`${type}-input`).value = e.target.result;
-      const badge = document.getElementById(`${type}-badge`);
-      badge.textContent = file.name;
-      badge.classList.add('loaded');
-    };
-    reader.readAsText(file, 'UTF-8');
+function readFile(file, type) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById(type + '-input').value = e.target.result;
+    const badge = document.getElementById(type + '-badge');
+    badge.textContent = file.name;
+    badge.classList.add('loaded');
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function loadFile(input, type) {
+  if (input.files[0]) readFile(input.files[0], type);
+}
+
+function clearPanel(type) {
+  document.getElementById(type + '-input').value = '';
+  const badge = document.getElementById(type + '-badge');
+  badge.textContent = 'kein Inhalt';
+  badge.classList.remove('loaded');
+}
+
+function clearResult() {
+  document.getElementById('result').innerHTML =
+    '<span class="status-idle">— Kein Ergebnis.</span>';
+}
+
+function validate() {
+  if (!wasmBinary) return;
+
+  const xml = document.getElementById('xml-input').value.trim();
+  const xsd = document.getElementById('xsd-input').value.trim();
+  const resultEl = document.getElementById('result');
+  const loadingBar = document.getElementById('loading-bar');
+
+  if (!xml) {
+    resultEl.innerHTML = '<span style="color:var(--warn)">⚠ Kein XML-Inhalt vorhanden.</span>';
+    return;
   }
 
-  window.loadFile = function(input, type) {
-    if (input.files[0]) readFile(input.files[0], type);
-  };
+  loadingBar.classList.add('active');
+  resultEl.innerHTML = '<span class="status-idle"><span class="spinner"></span> Validierung läuft …</span>';
 
-  window.clearPanel = function(type) {
-    document.getElementById(`${type}-input`).value = '';
-    const badge = document.getElementById(`${type}-badge`);
-    badge.textContent = 'kein Inhalt';
-    badge.classList.remove('loaded');
-  };
+  // Blob-Worker aus eingebettetem Code erstellen
+  const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
+  const workerUrl = URL.createObjectURL(blob);
+  const worker = new Worker(workerUrl, { type: 'module' });
 
-  window.clearResult = function() {
-    document.getElementById('result').innerHTML =
-      '<span class="status-idle">— Kein Ergebnis.</span>';
-  };
+  // Dateien vorbereiten
+  const inputFiles = [{ fileName: 'dokument.xml', contents: xml }];
+  const args = [];
 
-  window.validate = async function() {
-    if (!validateXML) return;
+  if (xsd) {
+    inputFiles.push({ fileName: 'schema.xsd', contents: xsd });
+    args.push('--schema', 'schema.xsd');
+  }
+  args.push('--noout', 'dokument.xml');
 
-    const xml = document.getElementById('xml-input').value.trim();
-    const xsd = document.getElementById('xsd-input').value.trim();
-    const resultEl = document.getElementById('result');
-    const loadingBar = document.getElementById('loading-bar');
+  // wasmBinary als transferable übergeben (Kopie, da wir das Original behalten)
+  const wasmCopy = wasmBinary.slice(0);
 
-    if (!xml) {
-      resultEl.innerHTML = '<span style="color:var(--warn)">⚠ Kein XML-Inhalt vorhanden.</span>';
-      return;
+  worker.postMessage({
+    inputFiles,
+    args,
+    wasmBinary: wasmCopy,
+    initialMemory: 256,
+    maxMemory: 512
+  }, [wasmCopy]);
+
+  worker.onmessage = (e) => {
+    worker.terminate();
+    URL.revokeObjectURL(workerUrl);
+    loadingBar.classList.remove('active');
+
+    const { exitCode, stderr } = e.data;
+    const valid = exitCode === 0;
+
+    if (valid) {
+      const mode = xsd ? 'gegen XSD-Schema' : '(Wohlgeformtheit)';
+      resultEl.innerHTML =
+        '<div><div class="badge badge-ok">✓ Gültig ' + mode + '</div>' +
+        '<div style="color:var(--text-dim);font-size:0.75rem;margin-top:0.25rem;">' +
+        (xsd ? 'Das XML-Dokument entspricht dem angegebenen Schema.' :
+               'Das XML-Dokument ist wohlgeformt. Kein XSD angegeben — Schemaprüfung übersprungen.') +
+        '</div></div>';
+    } else {
+      const errors = parseErrors(stderr);
+      resultEl.innerHTML =
+        '<div><div class="badge badge-err">✗ ' + errors.length + ' Fehler' + (xsd ? ' — Schema-Validierung' : ' — Wohlgeformtheit') + '</div>' +
+        '<div class="error-list">' + errors.map(renderError).join('') + '</div></div>';
     }
-
-    loadingBar.classList.add('active');
-    resultEl.innerHTML = '<span class="status-idle"><span class="spinner"></span> Validierung läuft …</span>';
-
-    try {
-      const options = {
-        xml: [{ fileName: 'dokument.xml', contents: xml }],
-      };
-
-      if (xsd) {
-        options.schema = [{ fileName: 'schema.xsd', contents: xsd }];
-      }
-
-      const result = await validateXML(options);
-      loadingBar.classList.remove('active');
-
-      if (result.valid) {
-        const mode = xsd ? 'gegen XSD-Schema' : '(Wohlgeformtheit)';
-        resultEl.innerHTML = `
-          <div class="status-ok">
-            <div class="badge">✓ Gültig ${mode}</div>
-            <div style="color:var(--text-dim);font-size:0.75rem;margin-top:0.25rem;">
-              ${xsd ? 'Das XML-Dokument entspricht dem angegebenen Schema.' : 'Das XML-Dokument ist wohlgeformt. Kein XSD angegeben — Schemaprüfung übersprungen.'}
-            </div>
-          </div>`;
-      } else {
-        const errors = parseErrors(result.errors);
-        const mode = xsd ? 'Schema-Validierung' : 'Wohlgeformtheit';
-        resultEl.innerHTML = `
-          <div class="status-err">
-            <div class="badge">✗ ${errors.length} Fehler — ${mode}</div>
-            <div class="error-list">${errors.map(renderError).join('')}</div>
-          </div>`;
-      }
-    } catch (e) {
-      loadingBar.classList.remove('active');
-      resultEl.innerHTML = `<span style="color:var(--err)">✗ Interner Fehler: ${escHtml(e.message)}</span>`;
-    }
   };
 
-  function parseErrors(errorsStr) {
-    if (!errorsStr) return [];
-    return errorsStr.split('\n')
-      .map(line => line.trim())
-      .filter(Boolean)
-      .map(line => {
-        // Format: dokument.xml:12: error : Meldung
-        const m = line.match(/^[^:]+:(\d+):\s*(?:error|warning|parser error)\s*:\s*(.+)$/i);
-        if (m) return { line: m[1], msg: m[2].trim() };
-        return { line: null, msg: line };
-      });
-  }
+  worker.onerror = (e) => {
+    worker.terminate();
+    URL.revokeObjectURL(workerUrl);
+    loadingBar.classList.remove('active');
+    resultEl.innerHTML = '<span style="color:var(--err)">✗ Worker-Fehler: ' + escHtml(e.message) + '</span>';
+  };
+}
 
-  function renderError(e) {
-    const loc = e.line ? `<span class="error-loc">Zeile ${e.line}</span>` : '<span class="error-loc">—</span>';
-    return `<div class="error-item">${loc}<span class="error-msg">${escHtml(e.msg)}</span></div>`;
-  }
+// Aus xmllint-wasm index-browser.mjs übernommen
+function parseErrors(output) {
+  if (!output) return [];
+  return output.split('\n')
+    .slice(0, -2)
+    .map(line => {
+      const parts = line.split(':');
+      const [fileName, lineNumber, ...rest] = parts;
+      if (fileName && lineNumber && rest.length) {
+        return {
+          rawMessage: line,
+          message: rest.join(':').trim(),
+          loc: { fileName, lineNumber: parseInt(lineNumber) }
+        };
+      }
+      return { rawMessage: line, message: line, loc: null };
+    })
+    .filter(e => {
+      const wasValid = !e.loc && e.rawMessage.trim().endsWith(' validates');
+      return !wasValid && e.rawMessage.trim().length > 0;
+    });
+}
 
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+function renderError(e) {
+  const loc = e.loc ? '<span class="error-loc">Zeile ' + e.loc.lineNumber + '</span>'
+                    : '<span class="error-loc">—</span>';
+  return '<div class="error-item">' + loc + '<span class="error-msg">' + escHtml(e.message) + '</span></div>';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
-
 </body>
 </html>
