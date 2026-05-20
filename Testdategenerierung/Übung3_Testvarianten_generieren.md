@@ -1,0 +1,102 @@
+# Übung 3 – Testvarianten mit KI-Unterstützung generieren und prüfen
+
+**Ziel:** Den Chatbot als Werkzeug zur systematischen Testdatengenerierung einsetzen —
+mit validierten Beispielen als Vorlage, fachlicher Steuerung durch euch und
+maschineller Prüfung vor dem ersten Senden.
+
+**Werkzeuge:**
+- Chatbot eurer Wahl
+- [XML/XSD Validator](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/Validator/xml_validator.html)
+- [SOAP-Testclient](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/System/soap_testclient.html)
+- Handbuch (Anhänge A, B, C)
+
+---
+
+## Vorgehen
+
+### 1. Kontext vorbereiten
+
+Gebt dem Chatbot folgende Materialien:
+
+- Den Prompt aus dem Kursordner (`prompt_testvarianten.md`)
+- Die drei Beispiel-XMLs (`beispiel_01_pruefeBuchbarkeit.xml`, `beispiel_02_insertBeleg_ohne_ust.xml`, `beispiel_03_insertBeleg_mit_ust.xml`)
+
+Noch nichts weiter — wartet auf Schritt 1 des Prompts.
+
+---
+
+### 2. Variationsauftrag formulieren
+
+Nachdem der Chatbot die Beispiele analysiert hat, gebt ihm folgenden Auftrag:
+
+> *„Verwende `beispiel_02_insertBeleg_ohne_ust.xml` als Vorlage. Variiere die
+> Felder `kontotitel`, `aobj` (Kostenstelle) und `belegbetrag` so, dass folgende
+> Szenarien abgedeckt werden. Verwende ausschließlich Werte aus Anhang A
+> (Kontotitel) und Anhang B (Kostenstellen) des Handbuchs."*
+
+Szenarien:
+
+| # | Szenario |
+|---|----------|
+| 1 | Gehaltsbuchung, eine Position, Kostenstelle 1010 (Vorlage — zum Aufwärmen) |
+| 2 | Gehaltsbuchung, eine Position, Kostenstelle 1020 |
+| 3 | Ausbildungsvergütung, eine Position, Kostenstelle 1020 |
+| 4 | Zwei Positionen: GEHÄLTER (1010) + AUSBILDUNGSVERGÜTUNG (1020) |
+| 5 | Buchung auf VERB. LOHN U. GEHALT als Belegkonto, GEHÄLTER als Position |
+
+**Wichtig vor dem nächsten Schritt:** Prüft jeden generierten Request bevor ihr
+ihn in den Validator ladet:
+
+- Sind alle Kontotitel wirklich aus Anhang A — oder hat der Chatbot welche erfunden?
+- Stimmt `belegbetrag` mit der Summe aller Positionsbeträge überein?
+- Sind alle fachlichen Namespace-Präfixe (`rw:`) korrekt gesetzt?
+
+---
+
+### 3. Requests im Validator prüfen
+
+Öffnet den [XML/XSD Validator](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/Validator/xml_validator.html).
+
+Ladet die Schemata (alle drei Dateien auf einmal):
+`soap-wrapper.xsd`, `soap-envelope.xsd`, `rechnungswesen-training.xsd`
+
+Für jeden generierten Request:
+1. Request in das XML-Feld einfügen
+2. Validieren
+3. Ergebnis dokumentieren:
+
+| # | Szenario | Validator | Fehler (falls vorhanden) | Korrektur nötig? |
+|---|----------|-----------|--------------------------|------------------|
+| 1 | Gehalt 1010 | OK / Fehler | … | … |
+| 2 | Gehalt 1020 | OK / Fehler | … | … |
+| 3 | Ausbildung 1020 | OK / Fehler | … | … |
+| 4 | Zwei Positionen | OK / Fehler | … | … |
+| 5 | VERB. LOHN U. GEHALT | OK / Fehler | … | … |
+
+**Fehler beheben:** Versucht Schema-Fehler zuerst selbst zu verstehen (Zeile +
+Fehlermeldung lesen). Erst dann den Chatbot um Erklärung bitten — und prüfen,
+ob seine Erklärung mit dem Schema übereinstimmt.
+
+---
+
+### 4. Valide Requests im Testclient senden
+
+Nur Requests die den Validator fehlerfrei passiert haben, kommen in den Testclient.
+
+Für `pruefeBuchbarkeit`: Prüfcode dokumentieren.
+Für `insertBeleg`: Erfolg (belegKey > 0) oder SOAP Fault dokumentieren.
+
+| # | Szenario | Prüfcode / Ergebnis | Anmerkung |
+|---|----------|---------------------|-----------|
+| 1 | … | … | … |
+| … | … | … | … |
+
+---
+
+## Reflexion
+
+- Bei welchen Szenarien hat der Chatbot auf Anhieb korrekte Werte geliefert?
+- Wo hat er Werte erfunden oder fachliche Regeln ignoriert — obwohl die
+  Beispiele als Vorlage vorlagen?
+- Was hat der Validator gefunden, das ihr beim manuellen Prüfen übersehen hättet?
+- Welchen Schritt würdet ihr beim nächsten Mal anders formulieren?
