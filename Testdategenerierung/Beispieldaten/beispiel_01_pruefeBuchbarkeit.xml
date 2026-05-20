@@ -32,7 +32,7 @@
     <!--
       WS-Security Header – Pflicht bei jedem Request.
       Werte mit der Schulungsumgebung abstimmen.
-      Format Username: name=<user>,database=<db>,mandant=100,niederlassung=1
+      Format Username: name=<rw:user>,database=<rw:db>,mandant=100,niederlassung=1
     -->
     <wsse:Security>
       <wsse:UsernameToken>
@@ -47,66 +47,66 @@
 
   <soapenv:Body>
     <rw:pruefeBuchbarkeit>
-      <belegdaten>
+      <rw:belegdaten>
 
         <!-- ── Buchungssteuerung ────────────────────────────────────── -->
         <!-- Bei pruefeBuchbarkeit hat status keinen Effekt (kein Insert),
              muss aber formal angegeben werden. -->
-        <status>1</status>
+        <rw:status>1</rw:status>
 
         <!-- ── Belegkopf ────────────────────────────────────────────── -->
-        <belegart>Umbuchung</belegart>
-        <buchungsdatum>2025-03-31</buchungsdatum>
-        <belegdatum>2025-03-31</belegdatum>
+        <rw:belegart>Umbuchung</rw:belegart>
+        <rw:buchungsdatum>2025-03-31</rw:buchungsdatum>
+        <rw:belegdatum>2025-03-31</rw:belegdatum>
 
         <!-- Belegkonto = Verbindlichkeitskonto (Haben-Seite) -->
-        <konto>LOHN-UND GEHALTSVER</konto>
-        <waehrung>EUR</waehrung>
+        <rw:konto>LOHN-UND GEHALTSVER</rw:konto>
+        <rw:waehrung>EUR</rw:waehrung>
 
         <!-- 0 = automatische Belegnummernvergabe -->
-        <beleg>0</beleg>
+        <rw:beleg>0</rw:beleg>
 
         <!-- Belegbetrag: POSITIV, weil Belegkonto im HABEN belastet wird -->
-        <belegbetrag>5000.00</belegbetrag>
+        <rw:belegbetrag>5000.00</rw:belegbetrag>
 
-        <text>Gehaltsbuchung März 2025</text>
-        <quellsystem>SAGE</quellsystem>
+        <rw:text>Gehaltsbuchung März 2025</rw:text>
+        <rw:quellsystem>SAGE</rw:quellsystem>
 
         <!-- ── Positionen ────────────────────────────────────────────── -->
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
 
           <!-- Aufwandskonto für Gehälter -->
-          <kontotitel>GEHÄLTER</kontotitel>
+          <rw:kontotitel>GEHÄLTER</rw:kontotitel>
 
           <!-- Betrag positiv, Buchungsseite über "soll" gesteuert -->
-          <betrag>5000.00</betrag>
-          <betragHW>5000.00</betragHW>
+          <rw:betrag>5000.00</rw:betrag>
+          <rw:betragHW>5000.00</rw:betragHW>
 
           <!-- true = Soll-Buchung (Aufwandskonto steigt) -->
-          <soll>true</soll>
+          <rw:soll>true</rw:soll>
 
           <!-- false = kein USt-Handling; GEHÄLTER hat UStKontierung "keine Auswahl" -->
-          <brutto>false</brutto>
+          <rw:brutto>false</rw:brutto>
 
           <!-- ustSchluessel NICHT senden für Konten ohne USt-Kontierung! -->
 
-          <text>Gehälter Abteilung Entwicklung</text>
+          <rw:text>Gehälter Abteilung Entwicklung</rw:text>
 
           <!-- Kostenstellen-Zuordnung (Pflicht bei BAB-Konten) -->
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>1010</aobj>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>1010</rw:aobj>
             <!-- Betrag = Nettobetrag (hier identisch, da brutto=false) -->
-            <betrag>5000.00</betrag>
-            <betragHW>5000.00</betragHW>
+            <rw:betrag>5000.00</rw:betrag>
+            <rw:betragHW>5000.00</rw:betragHW>
             <!-- erbt soll-Wert der Position -->
-            <soll>true</soll>
-          </aobjKontierungen>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
 
-        </belPositionen>
+        </rw:belPositionen>
 
-      </belegdaten>
+      </rw:belegdaten>
     </rw:pruefeBuchbarkeit>
   </soapenv:Body>
 

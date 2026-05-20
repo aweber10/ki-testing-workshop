@@ -15,7 +15,7 @@
     Summe Positionen = 6.500,00 € = belegbetrag ✓
 
   Was erwartest du als Ergebnis?
-    ● Erfolg: Response enthält <belegKey> mit belegID > 0
+    ● Erfolg: Response enthält <rw:belegKey> mit belegID > 0
     ● Fehler "Der Belegbetrag ist unvollständig auf Positionen kontiert":
       Tritt auf wenn Summe der Positionen ≠ belegbetrag
     ● Fehler "Das Sachkonto ist nicht dem Basis-BAB zugeordnet":
@@ -45,75 +45,75 @@
 
   <soapenv:Body>
     <rw:insertBeleg>
-      <belegdaten>
+      <rw:belegdaten>
 
         <!-- ── Buchungssteuerung ────────────────────────────────────── -->
         <!-- Status 1 = nur speichern (kein Buchungseffekt, sicher für Tests) -->
-        <status>1</status>
+        <rw:status>1</rw:status>
 
         <!-- ── Belegkopf ────────────────────────────────────────────── -->
-        <belegart>Umbuchung</belegart>
-        <buchungsdatum>2025-03-31</buchungsdatum>
-        <belegdatum>2025-03-31</belegdatum>
+        <rw:belegart>Umbuchung</rw:belegart>
+        <rw:buchungsdatum>2025-03-31</rw:buchungsdatum>
+        <rw:belegdatum>2025-03-31</rw:belegdatum>
 
         <!-- Belegkonto: Verbindlichkeit Löhne & Gehälter (Haben-Seite) -->
-        <konto>LOHN-UND GEHALTSVER</konto>
-        <waehrung>EUR</waehrung>
-        <beleg>0</beleg>
+        <rw:konto>LOHN-UND GEHALTSVER</rw:konto>
+        <rw:waehrung>EUR</rw:waehrung>
+        <rw:beleg>0</rw:beleg>
 
         <!--
           belegbetrag POSITIV = Belegkonto wird im Haben belastet.
           Muss exakt gleich der Summe aller Positionsbeträge sein: 5000 + 1500 = 6500
         -->
-        <belegbetrag>6500.00</belegbetrag>
+        <rw:belegbetrag>6500.00</rw:belegbetrag>
 
-        <text>Gehaltsbuchung März 2025</text>
-        <referenz>SAGE-2025-03-GEH</referenz>
-        <quellsystem>SAGE</quellsystem>
+        <rw:text>Gehaltsbuchung März 2025</rw:text>
+        <rw:referenz>SAGE-2025-03-GEH</rw:referenz>
+        <rw:quellsystem>SAGE</rw:quellsystem>
 
         <!-- ── Position 1: Gehälter Abteilung Entwicklung ────────────── -->
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>GEHÄLTER</kontotitel>
-          <betrag>5000.00</betrag>
-          <betragHW>5000.00</betragHW>
-          <soll>true</soll>
-          <brutto>false</brutto>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>GEHÄLTER</rw:kontotitel>
+          <rw:betrag>5000.00</rw:betrag>
+          <rw:betragHW>5000.00</rw:betragHW>
+          <rw:soll>true</rw:soll>
+          <rw:brutto>false</rw:brutto>
           <!-- kein ustSchluessel: GEHÄLTER hat UStKontierung "keine Auswahl" -->
-          <text>Gehälter Entwicklung März</text>
+          <rw:text>Gehälter Entwicklung März</rw:text>
 
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>1010</aobj>
-            <betrag>5000.00</betrag>
-            <betragHW>5000.00</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>1010</rw:aobj>
+            <rw:betrag>5000.00</rw:betrag>
+            <rw:betragHW>5000.00</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
 
         <!-- ── Position 2: Ausbildungsvergütung Kostenstelle Ausbildung ── -->
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>AUSBILDUNGSVERGÜTUNG</kontotitel>
-          <betrag>1500.00</betrag>
-          <betragHW>1500.00</betragHW>
-          <soll>true</soll>
-          <brutto>false</brutto>
-          <text>Azubis März</text>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>AUSBILDUNGSVERGÜTUNG</rw:kontotitel>
+          <rw:betrag>1500.00</rw:betrag>
+          <rw:betragHW>1500.00</rw:betragHW>
+          <rw:soll>true</rw:soll>
+          <rw:brutto>false</rw:brutto>
+          <rw:text>Azubis März</rw:text>
 
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>1020</aobj>
-            <betrag>1500.00</betrag>
-            <betragHW>1500.00</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>1020</rw:aobj>
+            <rw:betrag>1500.00</rw:betrag>
+            <rw:betragHW>1500.00</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
 
-      </belegdaten>
+      </rw:belegdaten>
 
       <!-- AutoKontierung aus MACH-Stammdaten nicht verwenden -->
-      <benutzeAutoKontierung>false</benutzeAutoKontierung>
+      <rw:benutzeAutoKontierung>false</rw:benutzeAutoKontierung>
 
     </rw:insertBeleg>
   </soapenv:Body>

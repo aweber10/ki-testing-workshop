@@ -1488,7 +1488,7 @@ const EXAMPLES = {
   pruefeBuchbarkeit: `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:tns="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/"
   xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
   
   <soapenv:Header>
@@ -1501,41 +1501,41 @@ const EXAMPLES = {
   </soapenv:Header>
   
   <soapenv:Body>
-    <tns:pruefeBuchbarkeit>
-      <tns:belegdaten>
-        <tns:status>1</tns:status>
-        <tns:belegart>Umbuchung</tns:belegart>
-        <tns:buchungsdatum>${todayISO()}</tns:buchungsdatum>
-        <tns:belegdatum>${todayISO()}</tns:belegdatum>
-        <tns:konto>LOHN-UND GEHALTSVER</tns:konto>
-        <tns:waehrung>EUR</tns:waehrung>
-        <tns:beleg>0</tns:beleg>
-        <tns:belegbetrag>5000.00</tns:belegbetrag>
-        <tns:text>Gehaltsbuchung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</tns:text>
-        <tns:belPositionen>
-          <tns:positionsart>Sachbuchung</tns:positionsart>
-          <tns:kontotitel>GEHÄLTER</tns:kontotitel>
-          <tns:betrag>5000.00</tns:betrag>
-          <tns:betragHW>5000.00</tns:betragHW>
-          <tns:soll>true</tns:soll>
-          <tns:brutto>false</tns:brutto>
-          <tns:aobjKontierungen>
-            <tns:koReSicht>Kostenstelle</tns:koReSicht>
-            <tns:aobj>1010</tns:aobj>
-            <tns:betrag>5000.00</tns:betrag>
-            <tns:betragHW>5000.00</tns:betragHW>
-            <tns:soll>true</tns:soll>
-          </tns:aobjKontierungen>
-        </tns:belPositionen>
-      </tns:belegdaten>
-    </tns:pruefeBuchbarkeit>
+    <rw:pruefeBuchbarkeit>
+      <rw:belegdaten>
+        <rw:status>1</rw:status>
+        <rw:belegart>Umbuchung</rw:belegart>
+        <rw:buchungsdatum>${todayISO()}</rw:buchungsdatum>
+        <rw:belegdatum>${todayISO()}</rw:belegdatum>
+        <rw:konto>LOHN-UND GEHALTSVER</rw:konto>
+        <rw:waehrung>EUR</rw:waehrung>
+        <rw:beleg>0</rw:beleg>
+        <rw:belegbetrag>5000.00</rw:belegbetrag>
+        <rw:text>Gehaltsbuchung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</rw:text>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>GEHÄLTER</rw:kontotitel>
+          <rw:betrag>5000.00</rw:betrag>
+          <rw:betragHW>5000.00</rw:betragHW>
+          <rw:soll>true</rw:soll>
+          <rw:brutto>false</rw:brutto>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>1010</rw:aobj>
+            <rw:betrag>5000.00</rw:betrag>
+            <rw:betragHW>5000.00</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
+      </rw:belegdaten>
+    </rw:pruefeBuchbarkeit>
   </soapenv:Body>
 </soapenv:Envelope>`,
 
   insertBeleg: `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:tns="http://webservice.mach.de/rechnungswesen/v11/"
+  xmlns:rw="http://webservice.mach.de/rechnungswesen/v11/"
   xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
   
   <soapenv:Header>
@@ -1548,52 +1548,52 @@ const EXAMPLES = {
   </soapenv:Header>
   
   <soapenv:Body>
-    <tns:insertBeleg>
-      <tns:belegdaten>
-        <tns:status>1</tns:status>
-        <tns:belegart>Umbuchung</tns:belegart>
-        <tns:buchungsdatum>${todayISO()}</tns:buchungsdatum>
-        <tns:belegdatum>${todayISO()}</tns:belegdatum>
-        <tns:konto>VERB. LOHN U. GEHALT</tns:konto>
-        <tns:waehrung>EUR</tns:waehrung>
-        <tns:beleg>0</tns:beleg>
-        <tns:belegbetrag>112.54</tns:belegbetrag>
-        <tns:text>Reisekostenabrechnung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</tns:text>
-        <tns:belPositionen>
-          <tns:positionsart>Sachbuchung</tns:positionsart>
-          <tns:kontotitel>REISEKOSTEN</tns:kontotitel>
-          <tns:betrag>48.10</tns:betrag>
-          <tns:betragHW>48.10</tns:betragHW>
-          <tns:soll>true</tns:soll>
-          <tns:brutto>true</tns:brutto>
-          <tns:ustSchluessel>VSt 07%</tns:ustSchluessel>
-          <tns:aobjKontierungen>
-            <tns:koReSicht>Kostenstelle</tns:koReSicht>
-            <tns:aobj>2010</tns:aobj>
-            <tns:betrag>44.95</tns:betrag>
-            <tns:betragHW>44.95</tns:betragHW>
-            <tns:soll>true</tns:soll>
-          </tns:aobjKontierungen>
-        </tns:belPositionen>
-        <tns:belPositionen>
-          <tns:positionsart>Sachbuchung</tns:positionsart>
-          <tns:kontotitel>REISEKOSTEN</tns:kontotitel>
-          <tns:betrag>64.44</tns:betrag>
-          <tns:betragHW>64.44</tns:betragHW>
-          <tns:soll>true</tns:soll>
-          <tns:brutto>true</tns:brutto>
-          <tns:ustSchluessel>VSt 19%</tns:ustSchluessel>
-          <tns:aobjKontierungen>
-            <tns:koReSicht>Kostenstelle</tns:koReSicht>
-            <tns:aobj>2010</tns:aobj>
-            <tns:betrag>54.15</tns:betrag>
-            <tns:betragHW>54.15</tns:betragHW>
-            <tns:soll>true</tns:soll>
-          </tns:aobjKontierungen>
-        </tns:belPositionen>
-      </tns:belegdaten>
-      <tns:benutzeAutoKontierung>false</tns:benutzeAutoKontierung>
-    </tns:insertBeleg>
+    <rw:insertBeleg>
+      <rw:belegdaten>
+        <rw:status>1</rw:status>
+        <rw:belegart>Umbuchung</rw:belegart>
+        <rw:buchungsdatum>${todayISO()}</rw:buchungsdatum>
+        <rw:belegdatum>${todayISO()}</rw:belegdatum>
+        <rw:konto>VERB. LOHN U. GEHALT</rw:konto>
+        <rw:waehrung>EUR</rw:waehrung>
+        <rw:beleg>0</rw:beleg>
+        <rw:belegbetrag>112.54</rw:belegbetrag>
+        <rw:text>Reisekostenabrechnung ${new Date().toLocaleString('de-DE', { month: 'long', year: 'numeric' })}</rw:text>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>REISEKOSTEN</rw:kontotitel>
+          <rw:betrag>48.10</rw:betrag>
+          <rw:betragHW>48.10</rw:betragHW>
+          <rw:soll>true</rw:soll>
+          <rw:brutto>true</rw:brutto>
+          <rw:ustSchluessel>VSt 07%</rw:ustSchluessel>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>2010</rw:aobj>
+            <rw:betrag>44.95</rw:betrag>
+            <rw:betragHW>44.95</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>REISEKOSTEN</rw:kontotitel>
+          <rw:betrag>64.44</rw:betrag>
+          <rw:betragHW>64.44</rw:betragHW>
+          <rw:soll>true</rw:soll>
+          <rw:brutto>true</rw:brutto>
+          <rw:ustSchluessel>VSt 19%</rw:ustSchluessel>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>2010</rw:aobj>
+            <rw:betrag>54.15</rw:betrag>
+            <rw:betragHW>54.15</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
+      </rw:belegdaten>
+      <rw:benutzeAutoKontierung>false</rw:benutzeAutoKontierung>
+    </rw:insertBeleg>
   </soapenv:Body>
 </soapenv:Envelope>`
 };

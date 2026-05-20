@@ -61,29 +61,29 @@
 
   <soapenv:Body>
     <rw:insertBeleg>
-      <belegdaten>
+      <rw:belegdaten>
 
         <!-- ── Buchungssteuerung ────────────────────────────────────── -->
-        <status>1</status>
+        <rw:status>1</rw:status>
 
         <!-- ── Belegkopf ────────────────────────────────────────────── -->
-        <belegart>Umbuchung</belegart>
-        <buchungsdatum>2025-03-31</buchungsdatum>
-        <belegdatum>2025-03-28</belegdatum>
+        <rw:belegart>Umbuchung</rw:belegart>
+        <rw:buchungsdatum>2025-03-31</rw:buchungsdatum>
+        <rw:belegdatum>2025-03-28</rw:belegdatum>
 
-        <konto>VERB. LOHN U. GEHALT</konto>
-        <waehrung>EUR</waehrung>
-        <beleg>0</beleg>
+        <rw:konto>VERB. LOHN U. GEHALT</rw:konto>
+        <rw:waehrung>EUR</rw:waehrung>
+        <rw:beleg>0</rw:beleg>
 
         <!--
           Summe BRUTTO beider Positionen: 48,10 + 64,44 = 112,54
           Belegkonto im Haben → belegbetrag POSITIV
         -->
-        <belegbetrag>112.54</belegbetrag>
+        <rw:belegbetrag>112.54</rw:belegbetrag>
 
-        <text>Reisekostenabrechnung Müller März 2025</text>
-        <referenz>SAGE-2025-03-REISE-042</referenz>
-        <quellsystem>SAGE</quellsystem>
+        <rw:text>Reisekostenabrechnung Müller März 2025</rw:text>
+        <rw:referenz>SAGE-2025-03-REISE-042</rw:referenz>
+        <rw:quellsystem>SAGE</rw:quellsystem>
 
         <!-- ═══════════════════════════════════════════════════════════
              Position 1: Fahrtkosten (7% VSt, brutto=true)
@@ -91,28 +91,28 @@
              Netto:  44,95 € = 48,10 / 1,07  (gerundet auf 2 Dezimalstellen)
              VSt:     3,15 €  (bucht MACH automatisch intern)
              ═══════════════════════════════════════════════════════════ -->
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>REISEKOSTEN</kontotitel>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>REISEKOSTEN</rw:kontotitel>
 
           <!-- Bruttobetrag in betrag angeben bei brutto=true -->
-          <betrag>48.10</betrag>
-          <betragHW>48.10</betragHW>
-          <soll>true</soll>
+          <rw:betrag>48.10</rw:betrag>
+          <rw:betragHW>48.10</rw:betragHW>
+          <rw:soll>true</rw:soll>
 
           <!--
             brutto=true: MACH spaltet intern in Netto + VSt auf.
             Das Vorsteuer-Konto bucht MACH automatisch.
           -->
-          <brutto>true</brutto>
+          <rw:brutto>true</rw:brutto>
 
           <!--
             USt-Schlüssel MIT führender Null: "VSt 07%" nicht "VSt 7%"!
             Lookuptext der Gruppe "USt" in MACH.
           -->
-          <ustSchluessel>VSt 07%</ustSchluessel>
+          <rw:ustSchluessel>VSt 07%</rw:ustSchluessel>
 
-          <text>Bahnticket Frankfurt-Berlin</text>
+          <rw:text>Bahnticket Frankfurt-Berlin</rw:text>
 
           <!--
             aobjKontierung: NETTOBETRAG angeben!
@@ -120,14 +120,14 @@
             Bei Bruttobetrag käme der Fehler:
             "Der Betrag der Position ist unvollständig der Kostenrechnung zugeordnet"
           -->
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>2010</aobj>
-            <betrag>44.95</betrag>
-            <betragHW>44.95</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>2010</rw:aobj>
+            <rw:betrag>44.95</rw:betrag>
+            <rw:betragHW>44.95</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
 
         <!-- ═══════════════════════════════════════════════════════════
              Position 2: Hotelkosten (19% VSt, brutto=true)
@@ -135,31 +135,31 @@
              Netto:  54,15 € = 64,44 / 1,19  (gerundet)
              VSt:    10,29 €
              ═══════════════════════════════════════════════════════════ -->
-        <belPositionen>
-          <positionsart>Sachbuchung</positionsart>
-          <kontotitel>REISEKOSTEN</kontotitel>
+        <rw:belPositionen>
+          <rw:positionsart>Sachbuchung</rw:positionsart>
+          <rw:kontotitel>REISEKOSTEN</rw:kontotitel>
 
-          <betrag>64.44</betrag>
-          <betragHW>64.44</betragHW>
-          <soll>true</soll>
-          <brutto>true</brutto>
-          <ustSchluessel>VSt 19%</ustSchluessel>
+          <rw:betrag>64.44</rw:betrag>
+          <rw:betragHW>64.44</rw:betragHW>
+          <rw:soll>true</rw:soll>
+          <rw:brutto>true</rw:brutto>
+          <rw:ustSchluessel>VSt 19%</rw:ustSchluessel>
 
-          <text>Hotel Mercure Berlin 2 Nächte</text>
+          <rw:text>Hotel Mercure Berlin 2 Nächte</rw:text>
 
           <!-- Nettobetrag für Kostenstellen-Zuordnung: 64,44 / 1,19 = 54,15 -->
-          <aobjKontierungen>
-            <koReSicht>Kostenstelle</koReSicht>
-            <aobj>2010</aobj>
-            <betrag>54.15</betrag>
-            <betragHW>54.15</betragHW>
-            <soll>true</soll>
-          </aobjKontierungen>
-        </belPositionen>
+          <rw:aobjKontierungen>
+            <rw:koReSicht>Kostenstelle</rw:koReSicht>
+            <rw:aobj>2010</rw:aobj>
+            <rw:betrag>54.15</rw:betrag>
+            <rw:betragHW>54.15</rw:betragHW>
+            <rw:soll>true</rw:soll>
+          </rw:aobjKontierungen>
+        </rw:belPositionen>
 
-      </belegdaten>
+      </rw:belegdaten>
 
-      <benutzeAutoKontierung>false</benutzeAutoKontierung>
+      <rw:benutzeAutoKontierung>false</rw:benutzeAutoKontierung>
 
     </rw:insertBeleg>
   </soapenv:Body>

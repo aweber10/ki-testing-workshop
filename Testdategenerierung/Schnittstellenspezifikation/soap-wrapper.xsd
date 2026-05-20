@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+  SOAP-Wrapper-Schema für den XML/XSD Validator
+  =============================================================================
+  Diese XSD ist der Einstiegspunkt für die Validierung vollständiger
+  SOAP-Requests (mit soapenv:Envelope) gegen die Trainings-XSD.
+
+  Verwendung im Validator:
+    XML:  Kompletter SOAP-Request (mit Envelope, Header, Body)
+    XSD:  Diese Datei (soap-wrapper.xsd)
+
+  Beide Dateien müssen im gleichen Verzeichnis liegen:
+    soap-wrapper.xsd        ← diese Datei
+    soap-envelope.xsd       ← SOAP-1.1-Schema (W3C, lokal gespeichert)
+    rechnungswesen-training.xsd  ← fachliche Typen
+
+  =============================================================================
+-->
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- SOAP 1.1 Envelope (definiert soapenv:Envelope als Validierungswurzel) -->
+  <xs:import
+    namespace="http://schemas.xmlsoap.org/soap/envelope/"
+    schemaLocation="soap-envelope.xsd"/>
+
+  <!-- Fachliche Typen des RechnungswesenService -->
+  <xs:import
+    namespace="http://webservice.mach.de/rechnungswesen/v11/"
+    schemaLocation="rechnungswesen-training.xsd"/>
+
+</xs:schema>
