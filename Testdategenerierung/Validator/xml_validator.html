@@ -261,19 +261,22 @@
 
   <div class="panel">
     <div class="panel-header">
-      <span class="panel-label"><span class="dot xsd"></span>XSD-Schema</span>
+      <span class="panel-label"><span class="dot xsd"></span>Schemata (XSD / WSDL)</span>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-        <span class="file-badge" id="xsd-badge">kein Inhalt</span>
-        <button class="btn btn-sm" onclick="document.getElementById('xsd-file').click()">Datei laden</button>
-        <button class="btn btn-sm" onclick="clearPanel('xsd')">✕</button>
+        <span class="file-badge" id="xsd-badge">keine Dateien</span>
+        <button class="btn btn-sm" onclick="document.getElementById('xsd-file').click()">Dateien laden</button>
+        <button class="btn btn-sm" onclick="clearSchemas()">✕</button>
       </div>
-      <input type="file" id="xsd-file" accept=".xsd,.wsdl" onchange="loadFile(this,'xsd')">
+      <input type="file" id="xsd-file" accept=".xsd,.wsdl" multiple onchange="loadSchemaFiles(this)">
     </div>
     <div class="drop-zone" id="xsd-drop">
-      <div class="drop-overlay">XSD hier ablegen</div>
-      <textarea id="xsd-input" placeholder="XSD-Schema hier einfügen oder Datei laden / per Drag &amp; Drop ablegen …" spellcheck="false"></textarea>
+      <div class="drop-overlay">XSD / WSDL hier ablegen</div>
+      <div id="schema-list" style="padding:0.75rem 1rem;flex:1;overflow-y:auto;min-height:260px;font-family:var(--mono);font-size:0.8rem;">
+        <span style="color:var(--text-dim)">Alle XSD- und WSDL-Dateien hier ablegen oder laden.<br>
+        Der Einstiegspunkt wird automatisch erkannt (Datei ohne targetNamespace).</span>
+      </div>
     </div>
-    <div class="hint">WSDL-Dateien werden ebenfalls akzeptiert.</div>
+    <div class="hint">Alle Schemata auf einmal auswählen — z.B. soap-wrapper.xsd, soap-envelope.xsd, rechnungswesen-training.xsd</div>
   </div>
 
   <div class="action-bar">
@@ -323,15 +326,33 @@ async function initLib() {
 
 initLib();
 
-// Drag & Drop
-['xml', 'xsd'].forEach(type => {
-  const zone = document.getElementById(type + '-drop');
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('dragging');
-    const file = e.dataTransfer.files[0];
-    if (file) readFile(file, type);
+// Drag & Drop XML
+const xmlZone = document.getElementById('xml-drop');
+xmlZone.addEventListener('dragover', e => { e.preventDefault(); xmlZone.classList.add('dragging'); });
+xmlZone.addEventListener('dragleave', () => xmlZone.classList.remove('dragging'));
+xmlZone.addEventListener('drop', e => {
+  e.preventDefault(); xmlZone.classList.remove('dragging');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file, 'xml');
+});
+
+// Drag & Drop Schemata (mehrere)
+const xsdZone = document.getElementById('xsd-drop');
+xsdZone.addEventListener('dragover', e => { e.preventDefault(); xsdZone.classList.add('dragging'); });
+xsdZone.addEventListener('dragleave', () => xsdZone.classList.remove('dragging'));
+xsdZone.addEventListener('drop', e => {
+  e.preventDefault(); xsdZone.classList.remove('dragging');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.xsd') || f.name.endsWith('.wsdl'));
+  if (!files.length) return;
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      schemaFiles[file.name] = ev.target.result;
+      loaded++;
+      if (loaded === files.length) renderSchemaList();
+    };
+    reader.readAsText(file, 'UTF-8');
   });
 });
 
@@ -357,6 +378,73 @@ function clearPanel(type) {
   badge.classList.remove('loaded');
 }
 
+// Schema-Dateien (mehrere)
+const schemaFiles = {}; // fileName -> contents
+
+function loadSchemaFiles(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      schemaFiles[file.name] = e.target.result;
+      loaded++;
+      if (loaded === files.length) renderSchemaList();
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+function clearSchemas() {
+  Object.keys(schemaFiles).forEach(k => delete schemaFiles[k]);
+  renderSchemaList();
+}
+
+function renderSchemaList() {
+  const el = document.getElementById('schema-list');
+  const badge = document.getElementById('xsd-badge');
+  const names = Object.keys(schemaFiles);
+  if (!names.length) {
+    badge.textContent = 'keine Dateien';
+    badge.classList.remove('loaded');
+    el.innerHTML = '<span style="color:var(--text-dim)">Alle XSD- und WSDL-Dateien hier ablegen oder laden.<br>Der Einstiegspunkt wird automatisch erkannt (Datei ohne targetNamespace).</span>';
+    return;
+  }
+  badge.textContent = names.length + ' Datei' + (names.length > 1 ? 'en' : '');
+  badge.classList.add('loaded');
+
+  const entryPoint = detectEntryPoint(schemaFiles);
+  el.innerHTML = names.map(name => {
+    const isEntry = name === entryPoint;
+    return '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.2rem 0;border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:0.75rem;color:' + (isEntry ? 'var(--accent)' : 'var(--text-dim)') + ';flex:1;">' + escHtml(name) + '</span>' +
+      (isEntry ? '<span style="font-size:0.65rem;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0.1rem 0.4rem;">Einstiegspunkt</span>' : '') +
+      '<button onclick="removeSchema('' + escAttr(name) + '')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.85rem;padding:0 0.25rem;">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+function removeSchema(name) {
+  delete schemaFiles[name];
+  renderSchemaList();
+}
+
+function escAttr(s) {
+  return String(s).replace(/'/g, "\'");
+}
+
+function detectEntryPoint(schemas) {
+  // Wrapper-XSD hat kein targetNamespace — importiert nur
+  const names = Object.keys(schemas);
+  for (const name of names) {
+    const content = schemas[name];
+    if (!content.includes('targetNamespace')) return name;
+  }
+  // Fallback: erste .xsd-Datei
+  return names.find(n => n.endsWith('.xsd')) || names[0];
+}
+
 function clearResult() {
   document.getElementById('result').innerHTML =
     '<span class="status-idle">— Kein Ergebnis.</span>';
@@ -366,7 +454,6 @@ function validate() {
   if (!wasmBinary) return;
 
   const xml = document.getElementById('xml-input').value.trim();
-  const xsd = document.getElementById('xsd-input').value.trim();
   const resultEl = document.getElementById('result');
   const loadingBar = document.getElementById('loading-bar');
 
@@ -375,34 +462,30 @@ function validate() {
     return;
   }
 
+  const hasSchemas = Object.keys(schemaFiles).length > 0;
+  const entryPoint = hasSchemas ? detectEntryPoint(schemaFiles) : null;
+
   loadingBar.classList.add('active');
   resultEl.innerHTML = '<span class="status-idle"><span class="spinner"></span> Validierung läuft …</span>';
 
-  // Blob-Worker aus eingebettetem Code erstellen
   const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
   const workerUrl = URL.createObjectURL(blob);
   const worker = new Worker(workerUrl, { type: 'module' });
 
-  // Dateien vorbereiten
+  // XML + alle Schema-Dateien als inputFiles übergeben
   const inputFiles = [{ fileName: 'dokument.xml', contents: xml }];
-  const args = [];
+  Object.entries(schemaFiles).forEach(([name, contents]) => {
+    inputFiles.push({ fileName: name, contents });
+  });
 
-  if (xsd) {
-    inputFiles.push({ fileName: 'schema.xsd', contents: xsd });
-    args.push('--schema', 'schema.xsd');
+  const args = [];
+  if (hasSchemas && entryPoint) {
+    args.push('--schema', entryPoint);
   }
   args.push('--noout', 'dokument.xml');
 
-  // wasmBinary als transferable übergeben (Kopie, da wir das Original behalten)
   const wasmCopy = wasmBinary.slice(0);
-
-  worker.postMessage({
-    inputFiles,
-    args,
-    wasmBinary: wasmCopy,
-    initialMemory: 256,
-    maxMemory: 512
-  }, [wasmCopy]);
+  worker.postMessage({ inputFiles, args, wasmBinary: wasmCopy, initialMemory: 256, maxMemory: 512 }, [wasmCopy]);
 
   worker.onmessage = (e) => {
     worker.terminate();
@@ -413,17 +496,18 @@ function validate() {
     const valid = exitCode === 0;
 
     if (valid) {
-      const mode = xsd ? 'gegen XSD-Schema' : '(Wohlgeformtheit)';
+      const mode = hasSchemas ? ('gegen Schema (' + entryPoint + ')') : '(Wohlgeformtheit)';
       resultEl.innerHTML =
         '<div><div class="badge badge-ok">✓ Gültig ' + mode + '</div>' +
         '<div style="color:var(--text-dim);font-size:0.75rem;margin-top:0.25rem;">' +
-        (xsd ? 'Das XML-Dokument entspricht dem angegebenen Schema.' :
-               'Das XML-Dokument ist wohlgeformt. Kein XSD angegeben — Schemaprüfung übersprungen.') +
+        (hasSchemas ? 'Das XML-Dokument entspricht dem angegebenen Schema.' :
+                     'Das XML-Dokument ist wohlgeformt. Keine Schemata angegeben — Schemaprüfung übersprungen.') +
         '</div></div>';
     } else {
       const errors = parseErrors(stderr);
       resultEl.innerHTML =
-        '<div><div class="badge badge-err">✗ ' + errors.length + ' Fehler' + (xsd ? ' — Schema-Validierung' : ' — Wohlgeformtheit') + '</div>' +
+        '<div><div class="badge badge-err">✗ ' + errors.length + ' Fehler' +
+        (hasSchemas ? ' — Schema-Validierung' : ' — Wohlgeformtheit') + '</div>' +
         '<div class="error-list">' + errors.map(renderError).join('') + '</div></div>';
     }
   };
