@@ -267,7 +267,7 @@
         <button class="btn btn-sm" onclick="document.getElementById('xsd-file').click()">Dateien laden</button>
         <button class="btn btn-sm" onclick="clearSchemas()">✕</button>
       </div>
-      <input type="file" id="xsd-file" accept=".xsd,.wsdl" multiple onchange="loadSchemaFiles(this)">
+      <input type="file" id="xsd-file" accept=".xsd,.wsdl" multiple>
     </div>
     <div class="drop-zone" id="xsd-drop">
       <div class="drop-overlay">XSD / WSDL hier ablegen</div>
@@ -325,6 +325,10 @@ async function initLib() {
 }
 
 initLib();
+
+document.getElementById('xsd-file').addEventListener('change', function() {
+  loadSchemaFiles(this);
+});
 
 // Drag & Drop XML
 const xmlZone = document.getElementById('xml-drop');
@@ -420,7 +424,7 @@ function renderSchemaList() {
     return '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.2rem 0;border-bottom:1px solid var(--border);">' +
       '<span style="font-size:0.75rem;color:' + (isEntry ? 'var(--accent)' : 'var(--text-dim)') + ';flex:1;">' + escHtml(name) + '</span>' +
       (isEntry ? '<span style="font-size:0.65rem;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0.1rem 0.4rem;">Einstiegspunkt</span>' : '') +
-      '<button onclick="removeSchema('' + escAttr(name) + '')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.85rem;padding:0 0.25rem;">✕</button>' +
+      '<button onclick="removeSchema(&quot;' + escAttr(name) + '&quot;)" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.85rem;padding:0 0.25rem;">✕</button>' +
       '</div>';
   }).join('');
 }
