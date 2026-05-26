@@ -18,7 +18,7 @@ maschineller Prüfung vor dem ersten Senden.
 
 Gebt dem Chatbot folgende Materialien:
 
-- Den Prompt aus dem Kursordner: [prompt_testvarianten.md](../Prompt/prompt_testvarianten.md)
+- Den Prompt aus dem Kursordner: [prompt_testvarianten.md](Prompt/prompt_testvarianten.md)
 - Die drei Beispiel-XMLs (`beispiel_01_pruefeBuchbarkeit.xml`, `beispiel_02_insertBeleg_ohne_ust.xml`, `beispiel_03_insertBeleg_mit_ust.xml`)
 
 Noch nichts weiter — wartet auf Schritt 1 des Prompts.
