@@ -18,7 +18,7 @@ maschineller Prüfung vor dem ersten Senden.
 
 Gebt dem Chatbot folgende Materialien:
 
-- Den Prompt aus dem Kursordner (`prompt_testvarianten.md`)
+- Den Prompt aus dem Kursordner: [prompt_testvarianten.md](../Prompt/prompt_testvarianten.md)
 - Die drei Beispiel-XMLs (`beispiel_01_pruefeBuchbarkeit.xml`, `beispiel_02_insertBeleg_ohne_ust.xml`, `beispiel_03_insertBeleg_mit_ust.xml`)
 
 Noch nichts weiter — wartet auf Schritt 1 des Prompts.
@@ -58,7 +58,7 @@ ihn in den Validator ladet:
 Öffnet den [XML/XSD Validator](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/Validator/xml_validator.html).
 
 Ladet die Schemata (alle drei Dateien auf einmal):
-`soap-wrapper.xsd`, `soap-envelope.xsd`, `rechnungswesen-training.xsd`
+[soap-wrapper.xsd](../Schnittstellenspezifikation/soap-wrapper.xsd), [soap-envelope.xsd](../Schnittstellenspezifikation/soap-envelope.xsd), [rechnungswesen-training.xsd](../Schnittstellenspezifikation/rechnungswesen-training.xsd)
 
 Für jeden generierten Request:
 1. Request in das XML-Feld einfügen

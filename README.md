@@ -13,7 +13,7 @@ Das Finanz-Team eurer Firma nutzt die Belegerfassungsmaske, um Buchungen manuell
 
 ### Benötigte Dateien:
 - **Handbuch:** [belegerfassung_handbuch_v1.0.md](./Testfallspezifikation/Dokumentation/belegerfassung_handbuch_v1.0.md) (inkl. Anhänge A–C)
-- **Belegerfassungsmaske:** [belegerfassung.html](./Testfallspezifikation/System/belegerfassung.html) (Die Datei kann heruntergeladen und mit dem Browser geöffnet werden.)
+- **Belegerfassungsmaske:** [belegerfassung.html](https://aweber10.github.io/ki-testing-workshop/Testfallspezifikation/System/belegerfassung.html)
 
 
 ### Übungen:
@@ -35,7 +35,7 @@ In diesen Übungen lernt ihr, wie KI-Chatbots beim Erstellen und Validieren von 
 
 ### Benötigte Dateien:
 - **Handbuch:** [belegerfassung_handbuch_v1.0.md](./Testfallspezifikation/Dokumentation/belegerfassung_handbuch_v1.0.md)
-- **SOAP-Testclient:** [soap_testclient.html](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/System/soap_testclient.html) 
+- **SOAP-Testclient:** [soap_testclient.html](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/System/soap_testclient.html)
 - **WSDL:** [rechnungswesen-training.wsdl](./Testdategenerierung/Schnittstellenspezifikation/rechnungswesen-training.wsdl)
 - **XSD:** [rechnungswesen-training.xsd](./Testdategenerierung/Schnittstellenspezifikation/rechnungswesen-training.xsd)
 - **SOAP Envelope XSD:** [soap-envelope.xsd](./Testdategenerierung/Schnittstellenspezifikation/soap-envelope.xsd)
