@@ -35,16 +35,19 @@ In diesen Übungen lernt ihr, wie KI-Chatbots beim Erstellen und Validieren von 
 
 ### Benötigte Dateien:
 - **Handbuch:** [belegerfassung_handbuch_v1.0.md](./Testfallspezifikation/Dokumentation/belegerfassung_handbuch_v1.0.md)
-- **SOAP-Testclient:** [soap_testclient.html](./Testdategenerierung/System/soap_testclient.html) (Die Datei kann heruntergeladen und mit dem Browser geöffnet werden.)
+- **SOAP-Testclient:** [soap_testclient.html](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/System/soap_testclient.html) 
 - **WSDL:** [rechnungswesen-training.wsdl](./Testdategenerierung/Schnittstellenspezifikation/rechnungswesen-training.wsdl)
 - **XSD:** [rechnungswesen-training.xsd](./Testdategenerierung/Schnittstellenspezifikation/rechnungswesen-training.xsd)
+- **SOAP Envelope XSD:** [soap-envelope.xsd](./Testdategenerierung/Schnittstellenspezifikation/soap-envelope.xsd)
+- **SOAP Wrapper XSD:** [soap-wrapper.xsd](./Testdategenerierung/Schnittstellenspezifikation/soap-wrapper.xsd)
+- **XML/XSD-Validator:** [xml_validator.html](https://aweber10.github.io/ki-testing-workshop/Testdategenerierung/Validator/xml_validator.html)
 - **Beispiel-XML:**
   - [beispiel_01_pruefeBuchbarkeit.xml](./Testdategenerierung/Beispieldaten/beispiel_01_pruefeBuchbarkeit.xml)
   - [beispiel_02_insertBeleg_ohne_ust.xml](./Testdategenerierung/Beispieldaten/beispiel_02_insertBeleg_ohne_ust.xml)
   - [beispiel_03_insertBeleg_mit_ust.xml](./Testdategenerierung/Beispieldaten/beispiel_03_insertBeleg_mit_ust.xml)
 
 ### Übungen:
-1. [Übung1_Fehler_systematisch_provozieren.md](./Testdategenerierung/Übung1_Fehler_systematisch_provozieren.md)
-2. [Übung2_USt_Fallen.md](./Testdategenerierung/Übung2_USt_Fallen.md)
-3. [Übung3_Requests_aus_WSDL_generieren.md](./Testdategenerierung/Übung3_Requests_aus_WSDL_generieren.md)
-4. [Übung4_Von_Fachanforderung_zum_Request.md](./Testdategenerierung/Übung4_Von_Fachanforderung_zum_Request.md)
+6. [Übung1_Fehler_systematisch_provozieren.md](./Testdategenerierung/Übung1_Fehler_systematisch_provozieren.md)
+7. [Übung2_USt_Fallen.md](./Testdategenerierung/Übung2_USt_Fallen.md)
+8. [Übung3_Testvarianten_generieren.md](./Testdategenerierung/Übung3_Testvarianten_generieren.md)
+9. [Übung4_Von_Fachanforderung_zum_Request.md](./Testdategenerierung/Übung4_Von_Fachanforderung_zum_Request.md)
