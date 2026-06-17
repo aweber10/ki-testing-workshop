@@ -33,9 +33,9 @@ Nachdem der Chatbot die Beispiele analysiert hat, gebt ihm folgenden Auftrag:
 > *„Verwende `beispiel_02_insertBeleg_ohne_ust.xml` als Vorlage. Kopiere die
 > Vorlage zeichengenau und ändere ausschließlich die Felder `kontotitel`,
 > `aobj` (Kostenstelle) und `belegbetrag`. **Füge KEINE Elemente hinzu, die nicht
-> in der Vorlage stehen — insbesondere keine Login-, Auth- oder Header-Felder.
-> Wenn die Vorlage kein Login enthält, enthält auch kein generierter Request
-> ein Login.** Verwende ausschließlich Werte aus Anhang A (Kontotitel) und
+> in der Vorlage stehen.
+> Wenn die Vorlage das Feld nicht enthält, enthält auch kein generierter Request
+> dieses Feld.** Verwende ausschließlich Werte aus Anhang A (Kontotitel) und
 > Anhang B (Kostenstellen) des Handbuchs. Decke folgende Szenarien ab:"*
 
 Szenarien:
