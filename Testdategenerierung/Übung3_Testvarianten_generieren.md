@@ -2,7 +2,8 @@
 
 **Ziel:** Den Chatbot als Werkzeug zur systematischen Testdatengenerierung einsetzen —
 mit validierten Beispielen als Vorlage, fachlicher Steuerung durch euch und
-maschineller Prüfung vor dem ersten Senden.
+maschineller Prüfung vor dem ersten Senden. Nebenbei lernt ihr, wie ihr einen
+Prompt so schärft, dass das Modell weniger dazuerfindet.
 
 **Werkzeuge:**
 - Chatbot eurer Wahl
@@ -29,10 +30,13 @@ Noch nichts weiter — wartet auf Schritt 1 des Prompts.
 
 Nachdem der Chatbot die Beispiele analysiert hat, gebt ihm folgenden Auftrag:
 
-> *„Verwende `beispiel_02_insertBeleg_ohne_ust.xml` als Vorlage. Variiere die
-> Felder `kontotitel`, `aobj` (Kostenstelle) und `belegbetrag` so, dass folgende
-> Szenarien abgedeckt werden. Verwende ausschließlich Werte aus Anhang A
-> (Kontotitel) und Anhang B (Kostenstellen) des Handbuchs."*
+> *„Verwende `beispiel_02_insertBeleg_ohne_ust.xml` als Vorlage. Kopiere die
+> Vorlage zeichengenau und ändere ausschließlich die Felder `kontotitel`,
+> `aobj` (Kostenstelle) und `belegbetrag`. Füge KEINE Elemente hinzu, die nicht
+> in der Vorlage stehen — insbesondere keine Login-, Auth- oder Header-Felder.
+> Wenn die Vorlage kein Login enthält, enthält auch kein generierter Request
+> ein Login. Verwende ausschließlich Werte aus Anhang A (Kontotitel) und
+> Anhang B (Kostenstellen) des Handbuchs. Decke folgende Szenarien ab:"*
 
 Szenarien:
 
@@ -44,9 +48,17 @@ Szenarien:
 | 4 | Zwei Positionen: GEHÄLTER (1010) + AUSBILDUNGSVERGÜTUNG (1020) |
 | 5 | Buchung auf VERB. LOHN U. GEHALT als Belegkonto, GEHÄLTER als Position |
 
+> **Hinweis für fortgeschrittene Teilnehmer:** Formuliert den Auftrag zuerst OHNE die fettgedruckte
+> Negativregel (nur „variiere die Felder …"). Beobachtet, was das Modell
+> dazuerfindet — häufig ein erfundenes Login- oder Auth-Element. Ergänzt dann
+> die Negativregel und vergleicht das Ergebnis. Dieser Vorher/Nachher-Vergleich
+> ist der eigentliche Lerneffekt der Übung.
+
 **Wichtig vor dem nächsten Schritt:** Prüft jeden generierten Request bevor ihr
 ihn in den Validator ladet:
 
+- Hat der Chatbot Elemente hinzugefügt, die NICHT in der Vorlage stehen
+  (z. B. ein erfundenes Login-, Auth- oder Header-Element)?
 - Sind alle Kontotitel wirklich aus Anhang A — oder hat der Chatbot welche erfunden?
 - Stimmt `belegbetrag` mit der Summe aller Positionsbeträge überein?
 - Sind alle fachlichen Namespace-Präfixe (`rw:`) korrekt gesetzt?
@@ -73,6 +85,12 @@ Für jeden generierten Request:
 | 4 | Zwei Positionen | OK / Fehler | … | … |
 | 5 | VERB. LOHN U. GEHALT | OK / Fehler | … | … |
 
+> **Achtung — wichtiger Lernpunkt:** Ein erfundenes Login-Element kann unter
+> Umständen schemavalide durchrutschen oder genau hier einen Fehler auslösen.
+> Beides ist lehrreich: Valides XML ≠ fachlich korrekter Request. Der Validator
+> prüft die Struktur, nicht ob das Modell etwas dazuerfunden hat. Diese Lücke
+> schließt nur euer Blick auf die Vorlage.
+
 **Fehler beheben:** Versucht Schema-Fehler zuerst selbst zu verstehen (Zeile +
 Fehlermeldung lesen). Erst dann den Chatbot um Erklärung bitten — und prüfen,
 ob seine Erklärung mit dem Schema übereinstimmt.
@@ -98,5 +116,8 @@ Für `insertBeleg`: Erfolg (belegKey > 0) oder SOAP Fault dokumentieren.
 - Bei welchen Szenarien hat der Chatbot auf Anhieb korrekte Werte geliefert?
 - Wo hat er Werte erfunden oder fachliche Regeln ignoriert — obwohl die
   Beispiele als Vorlage vorlagen?
-- Was hat der Validator gefunden, das ihr beim manuellen Prüfen übersehen hättet?
+- Welchen Unterschied hat die Negativregel („füge KEINE Elemente hinzu …")
+  gemacht? Hat sie das Erfinden vollständig verhindert oder nur reduziert?
+- Was hat der Validator gefunden, das ihr beim manuellen Prüfen übersehen hättet —
+  und was hat er NICHT gefunden, weil es schemavalide war?
 - Welchen Schritt würdet ihr beim nächsten Mal anders formulieren?
