@@ -85,11 +85,12 @@ Für jeden generierten Request:
 | 4 | Zwei Positionen | OK / Fehler | … | … |
 | 5 | VERB. LOHN U. GEHALT | OK / Fehler | … | … |
 
-> **Achtung — wichtiger Lernpunkt:** Ein erfundenes Login-Element kann unter
-> Umständen schemavalide durchrutschen oder genau hier einen Fehler auslösen.
-> Beides ist lehrreich: Valides XML ≠ fachlich korrekter Request. Der Validator
-> prüft die Struktur, nicht ob das Modell etwas dazuerfunden hat. Diese Lücke
-> schließt nur euer Blick auf die Vorlage.
+> **Beobachtung:** Manchmal sagt der Validator „valide", obwohl der Chatbot ein
+> Login- oder Auth-Element dazuerfunden hat. Das liegt nicht am Validator — der
+> SOAP-Rahmen lässt an seinen Rändern bewusst Zusatzelemente zu. Geprüft wird
+> der Aufbau, nicht ob ein Element fachlich hierhergehört. Heißt für euch:
+> valide ≠ fachlich korrekt — den Blick auf die Vorlage nimmt euch der Validator
+> nicht ab.
 
 **Fehler beheben:** Versucht Schema-Fehler zuerst selbst zu verstehen (Zeile +
 Fehlermeldung lesen). Erst dann den Chatbot um Erklärung bitten — und prüfen,
